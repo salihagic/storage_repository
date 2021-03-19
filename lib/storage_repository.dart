@@ -29,13 +29,11 @@ class StorageRepository implements IStorageRepository {
     return _box.get(key);
   }
 
-  //contains
   @override
   bool containsKey(dynamic key) {
     return _box.containsKey(key);
   }
 
-  //delete by key
   @override
   Future delete(dynamic key) {
     return _box.delete(key);
