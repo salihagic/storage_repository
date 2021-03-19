@@ -1,30 +1,40 @@
+
 # Storage repository
 
 Abstraction for persisting and reading data to platform specific storage.
+You can also find this package on pub as [storage_repository](https://pub.dev/packages/storage_repository) 
 
 ## Usage
 ```
 Future  main() async {
-    final storageRepository = StorageRepository();
-    //Or use like this to support dependency injection
-    IStorageRepository concreteStorageRepository = StorageRepository();
+    WidgetsFlutterBinding.ensureInitialized();
 
-    //init must be called
-    await storageRepository.init();
+    IStorageRepository  storageRepository  =  StorageRepository();
+    //init must be called, preferably right after the instantiation
+    await  storageRepository.init();
 
-    //or like this(if you want to separate storage by some parameter)
-    await storageRepository.init(prefix: 'current_user_id');
+    await  storageRepository.set('some_string_key', 'Some string');
+    await  storageRepository.set('some_int_key', 0);
+    ///dynamic keys are also possible
+    await  storageRepository.set(1, 1);
 
-    storageRepository.set('key', 'dynamic value');
+    ///result: Some string (dynamic)
+    print(storageRepository.get('some_string_key'));
 
-    final value = storageRepository.get('key');
+    ///result: 0 (dynamic)
+    print(storageRepository.get('some_int_key'));
 
-    bool containsKey = storageRepository.containsKey('key');
+    ///result: 1 (dynamic)
+    print(storageRepository.get(1));
 
-    storageRepository.delete('key');
+    ///result: 1 (int?)
+    print(storageRepository.get<int>(1));
 
-    storageRepository.log();
+    storageRepository.delete('some_string_key');
+
+    storageRepository.print();
 
     storageRepository.clear();
 }
+
 ```

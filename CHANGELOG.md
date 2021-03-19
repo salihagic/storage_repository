@@ -1,3 +1,9 @@
+## [0.0.6] 
+* README.md updated
+
+## [0.0.5] 
+* README.md updated
+
 ## [0.0.5] 
 * API changes, simplified
 * Example reimplemented
