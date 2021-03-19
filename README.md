@@ -15,19 +15,19 @@ Future  main() async {
 
     await  storageRepository.set('some_string_key', 'Some string');
     await  storageRepository.set('some_int_key', 0);
-    ///dynamic keys are also possible
+    //dynamic keys are also possible
     await  storageRepository.set(1, 1);
 
-    ///result: Some string (dynamic)
+    //result: Some string (dynamic)
     print(storageRepository.get('some_string_key'));
 
-    ///result: 0 (dynamic)
+    //result: 0 (dynamic)
     print(storageRepository.get('some_int_key'));
 
-    ///result: 1 (dynamic)
+    //result: 1 (dynamic)
     print(storageRepository.get(1));
 
-    ///result: 1 (int?)
+    //result: 1 (int?)
     print(storageRepository.get<int>(1));
 
     storageRepository.delete('some_string_key');

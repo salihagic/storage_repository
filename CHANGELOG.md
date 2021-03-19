@@ -1,3 +1,6 @@
+## [0.0.7] 
+* README.md updated
+
 ## [0.0.6] 
 * README.md updated
 
