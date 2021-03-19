@@ -1,6 +1,6 @@
 name: storage_repository
 description: Abstraction for persisting and reading data to platform specific storage. Best used with dependency injection approach.
-version: 0.0.3
+version: 0.0.4
 repository: https://github.com/salihagic/storage_repository
 
 environment:
