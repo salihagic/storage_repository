@@ -6,6 +6,8 @@ const KEY = 'COUNTER_VALUE';
 Future main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final storageRepository = StorageRepository();
+  //or
+  //final storageRepository = SecureStorageRepository();
   await storageRepository.init();
 
   runApp(
@@ -27,14 +29,16 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
+  int _currentValue = 0;
+
   @override
   void initState() {
     super.initState();
     widget.storageRepository.clear();
   }
 
-  int getCurrentValue() {
-    return widget.storageRepository.get<int>(KEY) ?? 0;
+  Future<int> getCurrentValue() async {
+    return await widget.storageRepository.get<int>(KEY) ?? 0;
   }
 
   Future setNewValue(int value) async {
@@ -42,8 +46,9 @@ class _HomeState extends State<Home> {
   }
 
   Future onPressed() async {
-    final currentValue = getCurrentValue();
+    var currentValue = await getCurrentValue();
     await setNewValue(currentValue + 1);
+    _currentValue = await getCurrentValue();
     setState(() {});
   }
 
@@ -59,7 +64,7 @@ class _HomeState extends State<Home> {
           children: [
             Text('You have clicked increment button this many times:'),
             Text(
-              getCurrentValue().toString(),
+              _currentValue.toString(),
               style: TextStyle(fontSize: 26.0),
             ),
           ],

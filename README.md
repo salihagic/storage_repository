@@ -4,10 +4,13 @@ You can also find this package on pub as [storage_repository](https://pub.dev/pa
 
 ## Usage
 ```
-Future  main() async {
+Future main() async {
     WidgetsFlutterBinding.ensureInitialized();
 
-    IStorageRepository  storageRepository  =  StorageRepository();
+    //Instantiate a basic storage repository
+    IStorageRepository storageRepository = StorageRepository();
+    //or use a secure version of storage repository
+    storageRepository = SecureStorageRepository();
     //init must be called, preferably right after the instantiation
     await storageRepository.init();
 
@@ -17,22 +20,22 @@ Future  main() async {
     await storageRepository.set(1, 1);
 
     //result: Some string (dynamic)
-    print(storageRepository.get('some_string_key'));
+    print(await storageRepository.get('some_string_key'));
 
     //result: 0 (dynamic)
-    print(storageRepository.get('some_int_key'));
+    print(await storageRepository.get('some_int_key'));
 
     //result: 1 (dynamic)
-    print(storageRepository.get(1));
+    print(await storageRepository.get(1));
 
     //result: 1 (int?)
-    print(storageRepository.get<int>(1));
+    print(await storageRepository.get<int>(1));
 
-    storageRepository.delete('some_string_key');
+    await storageRepository.delete('some_string_key');
 
-    storageRepository.print();
+    await storageRepository.print();
 
-    storageRepository.clear();
+    await storageRepository.clear();
 }
 
 ```
