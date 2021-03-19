@@ -1,11 +1,11 @@
 name: storage_repository
 description: Abstraction for persisting and reading data to platform specific storage. Best used with dependency injection approach.
-version: 0.0.2
+version: 0.0.3
 repository: https://github.com/salihagic/storage_repository
 
 environment:
-  sdk: ">=2.7.0 <3.0.0"
-  flutter: ">=1.17.0"
+  sdk: ">=2.12.1 <3.0.0"
+  flutter: ">=2.0.2"
 
 dependencies:
   flutter:
