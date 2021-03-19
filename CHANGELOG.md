@@ -1,3 +1,7 @@
+## [0.0.5] 
+* API changes, simplified
+* Example reimplemented
+
 ## [0.0.4] 
 * Example simplified
 
