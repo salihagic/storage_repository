@@ -1,0 +1,20 @@
+name: storage_repository
+description: A new Flutter package project.
+version: 0.0.1
+repository: https://github.com/salihagic/storage_repository
+
+environment:
+  sdk: ">=2.7.0 <3.0.0"
+  flutter: ">=1.17.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  hive: ^2.0.0
+  hive_flutter: ^1.0.0
+  
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+flutter:
