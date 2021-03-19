@@ -1,56 +1,57 @@
-import 'package:hive/hive.dart';
-import 'package:hive_flutter/hive_flutter.dart';
+import 'dart:convert';
+import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 abstract class IStorageRepository {
-  Future init({String prefix = ''});
-  Future set<E>(dynamic key, E value);
-  E? get<E>(dynamic key);
-  bool containsKey(dynamic key);
-  Future delete(dynamic key);
-  void log();
-  Future clear({String prefix = ''});
+  Future<IStorageRepository> init();
+  Future<bool> set<T>(dynamic key, T value);
+  T? get<T>(dynamic key);
+  bool contains(dynamic key);
+  Future<bool> delete(dynamic key);
+  void print();
+  Future clear();
 }
 
 class StorageRepository implements IStorageRepository {
-  late Box _box;
+  late SharedPreferences storage;
 
-  Future init({String prefix = ''}) async {
-    await Hive.initFlutter();
-    _box = await Hive.openBox('${prefix}storageBox');
+  Future<IStorageRepository> init() async {
+    storage = await SharedPreferences.getInstance();
+    return this;
   }
 
   @override
-  Future set<E>(dynamic key, E value) {
-    return _box.put(key, value);
+  Future<bool> set<T>(dynamic key, T value) async {
+    return key != null && await storage.setString(json.encode(key), json.encode(value ?? ''));
   }
 
   @override
   E? get<E>(dynamic key) {
-    return _box.get(key);
+    final value = storage.getString(json.encode(key));
+    return value != null ? json.decode(value) : null;
   }
 
   @override
-  bool containsKey(dynamic key) {
-    return _box.containsKey(key);
+  bool contains(dynamic key) {
+    return key != null && storage.containsKey(json.encode(key));
   }
 
   @override
-  Future delete(dynamic key) {
-    return _box.delete(key);
+  Future<bool> delete(dynamic key) async {
+    return key != null && await storage.remove(json.encode(key));
   }
 
-  void log() {
-    print('\n----------------------------------------------------------------------------------------');
-    print('Storage repository data:');
-    print('----------------------------------------------------------------------------------------');
-    _box.keys.forEach((key) {
-      print('\n\n${key.toString()}: ${_box.get(key)}');
+  Future<bool> clear() async {
+    return await storage.clear();
+  }
+
+  void print() {
+    debugPrint('\n----------------------------------------------------------------------------------------');
+    debugPrint('Storage repository data:');
+    debugPrint('----------------------------------------------------------------------------------------');
+    storage.getKeys().forEach((key) {
+      debugPrint('\n\n$key: ${storage.getString(key)}');
     });
-    print('\n----------------------------------------------------------------------------------------\n');
-  }
-
-  Future clear({String prefix = ''}) async {
-    await Hive.initFlutter();
-    await Hive.deleteBoxFromDisk('${prefix}storageBox');
+    debugPrint('\n----------------------------------------------------------------------------------------\n');
   }
 }

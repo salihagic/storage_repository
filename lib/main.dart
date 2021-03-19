@@ -6,7 +6,7 @@ Future main() async {
   IStorageRepository concreteStorageRepository = StorageRepository();
 
   //Initialize like this(if you want to separate storage by some parameter)
-  await storageRepository.init(prefix: 'current_user_id');
+  await storageRepository.init();
 
   storageRepository.set('key', 'dynamic value');
   concreteStorageRepository.set('key2', 1);
@@ -17,13 +17,13 @@ Future main() async {
   assert(firstValue == 'dynamic value');
   assert(secondValue == 1);
 
-  assert(storageRepository.containsKey('key'));
+  assert(storageRepository.contains('key'));
 
   storageRepository.delete('key');
 
-  assert(!storageRepository.containsKey('key'));
+  assert(!storageRepository.contains('key'));
 
-  storageRepository.log();
+  storageRepository.print();
 
   storageRepository.clear();
 }
