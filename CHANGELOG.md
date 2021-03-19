@@ -1,3 +1,6 @@
+## [1.0.0] 
+* Stable
+
 ## [0.0.7] 
 * README.md updated
 

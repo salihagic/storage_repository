@@ -1,6 +1,4 @@
-
 # Storage repository
-
 Abstraction for persisting and reading data to platform specific storage.
 You can also find this package on pub as [storage_repository](https://pub.dev/packages/storage_repository) 
 
@@ -11,12 +9,12 @@ Future  main() async {
 
     IStorageRepository  storageRepository  =  StorageRepository();
     //init must be called, preferably right after the instantiation
-    await  storageRepository.init();
+    await storageRepository.init();
 
-    await  storageRepository.set('some_string_key', 'Some string');
-    await  storageRepository.set('some_int_key', 0);
+    await storageRepository.set('some_string_key', 'Some string');
+    await storageRepository.set('some_int_key', 0);
     //dynamic keys are also possible
-    await  storageRepository.set(1, 1);
+    await storageRepository.set(1, 1);
 
     //result: Some string (dynamic)
     print(storageRepository.get('some_string_key'));

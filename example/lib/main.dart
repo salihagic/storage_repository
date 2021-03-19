@@ -10,10 +10,8 @@ Future main() async {
 
   runApp(
     MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
+      title: 'Storage repository example',
+      theme: ThemeData(primarySwatch: Colors.blue),
       home: Home(storageRepository: storageRepository),
     ),
   );
