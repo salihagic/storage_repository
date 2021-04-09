@@ -1,3 +1,6 @@
+## [1.0.3] 
+* Replaced Hive with SharedPreferences
+
 ## [1.0.2] 
 * Replaced SharedPreferences with Hive
 
