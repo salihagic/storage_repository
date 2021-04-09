@@ -1,3 +1,6 @@
+## [1.0.2] 
+* Replaced SharedPreferences with Hive
+
 ## [1.0.1] 
 * New implementation, SecureStorageRepository
 
