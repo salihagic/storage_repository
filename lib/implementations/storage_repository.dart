@@ -61,7 +61,7 @@ class StorageRepository implements IStorageRepository {
     final StringBuffer stringBuffer = StringBuffer();
 
     stringBuffer.write('\n----------------------------------------------------------------------------------------');
-    stringBuffer.write('Storage repository data:');
+    stringBuffer.write('\nStorage repository data:');
     stringBuffer.write('\n----------------------------------------------------------------------------------------');
     _storage.getKeys().forEach((key) {
       stringBuffer.write('\n\n$key: ${_storage.getString(key)}');

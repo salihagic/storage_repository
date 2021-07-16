@@ -68,7 +68,7 @@ class SecureStorageRepository implements IStorageRepository {
     final StringBuffer stringBuffer = StringBuffer();
 
     stringBuffer.write('\n----------------------------------------------------------------------------------------');
-    stringBuffer.write('Storage repository data:');
+    stringBuffer.write('\nSecure storage repository data:');
     stringBuffer.write('\n----------------------------------------------------------------------------------------');
     (await _storage.readAll()).forEach((key, value) {
       stringBuffer.write('\n\n$key: $value');

@@ -1,4 +1,4 @@
-## [1.0.4] 
+## [1.0.5] 
 * Added asString method and print renamed to log
 
 ## [1.0.3] 
