@@ -18,7 +18,10 @@ abstract class IStorageRepository {
   Future<bool> delete(dynamic key);
 
   ///Method declaration for a method that should log all the data to the console
-  Future print();
+  Future log();
+
+  ///Method declaration for a method that should return String representation of the data stored in the repository
+  Future<String> asString();
 
   ///Method declaration for a method that should clear all the data
   Future clear();

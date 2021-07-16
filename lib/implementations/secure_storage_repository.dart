@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
+import 'dart:developer' as developer;
 import 'package:storage_repository/interfaces/i_storage_repository.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
@@ -12,7 +12,7 @@ class SecureStorageRepository implements IStorageRepository {
   ///initialization of an instance of this class
   @override
   Future<IStorageRepository> init() async {
-    _storage = FlutterSecureStorage();
+    _storage = const FlutterSecureStorage();
     return this;
   }
 
@@ -20,8 +20,7 @@ class SecureStorageRepository implements IStorageRepository {
   @override
   Future<bool> set<T>(dynamic key, T value) async {
     if (key != null) {
-      await _storage.write(
-          key: json.encode(key), value: json.encode(value ?? ''));
+      await _storage.write(key: json.encode(key), value: json.encode(value ?? ''));
     }
 
     return true;
@@ -52,22 +51,30 @@ class SecureStorageRepository implements IStorageRepository {
 
   ///Use carefully
   ///Method that resets the storage, removes all the saved data
+  @override
   Future<bool> clear() async {
     await _storage.deleteAll();
     return true;
   }
 
   ///Info method used for logging all the data to a console
-  Future print() async {
-    debugPrint(
-        '\n----------------------------------------------------------------------------------------');
-    debugPrint('Storage repository data:');
-    debugPrint(
-        '----------------------------------------------------------------------------------------');
+  @override
+  Future log() async {
+    developer.log(await asString());
+  }
+
+  @override
+  Future<String> asString() async {
+    final StringBuffer stringBuffer = StringBuffer();
+
+    stringBuffer.write('\n----------------------------------------------------------------------------------------');
+    stringBuffer.write('Storage repository data:');
+    stringBuffer.write('\n----------------------------------------------------------------------------------------');
     (await _storage.readAll()).forEach((key, value) {
-      debugPrint('\n\n$key: $value');
+      stringBuffer.write('\n\n$key: $value');
     });
-    debugPrint(
-        '\n----------------------------------------------------------------------------------------\n');
+    stringBuffer.write('\n----------------------------------------------------------------------------------------');
+
+    return stringBuffer.toString();
   }
 }

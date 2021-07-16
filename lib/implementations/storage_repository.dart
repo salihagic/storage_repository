@@ -1,5 +1,5 @@
+import 'dart:developer' as developer;
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:storage_repository/interfaces/i_storage_repository.dart';
 
@@ -20,8 +20,7 @@ class StorageRepository implements IStorageRepository {
   ///Method that is used to save data to device's storage
   @override
   Future<bool> set<T>(dynamic key, T value) async {
-    return key != null &&
-        await _storage.setString(json.encode(key), json.encode(value ?? ''));
+    return key != null && await _storage.setString(json.encode(key), json.encode(value ?? ''));
   }
 
   ///Method used to get the value saved under a given key
@@ -53,16 +52,22 @@ class StorageRepository implements IStorageRepository {
 
   ///Info method used for logging all the data to a console
   @override
-  Future print() async {
-    debugPrint(
-        '\n----------------------------------------------------------------------------------------');
-    debugPrint('Storage repository data:');
-    debugPrint(
-        '----------------------------------------------------------------------------------------');
+  Future log() async {
+    developer.log(await asString());
+  }
+
+  @override
+  Future<String> asString() async {
+    final StringBuffer stringBuffer = StringBuffer();
+
+    stringBuffer.write('\n----------------------------------------------------------------------------------------');
+    stringBuffer.write('Storage repository data:');
+    stringBuffer.write('\n----------------------------------------------------------------------------------------');
     _storage.getKeys().forEach((key) {
-      debugPrint('\n\n$key: ${_storage.getString(key)}');
+      stringBuffer.write('\n\n$key: ${_storage.getString(key)}');
     });
-    debugPrint(
-        '\n----------------------------------------------------------------------------------------\n');
+    stringBuffer.write('\n----------------------------------------------------------------------------------------');
+
+    return stringBuffer.toString();
   }
 }

@@ -1,3 +1,6 @@
+## [1.0.4] 
+* Added asString method and print renamed to log
+
 ## [1.0.3] 
 * Replaced Hive with SharedPreferences
 

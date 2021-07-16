@@ -33,7 +33,7 @@ Future main() async {
 
     await storageRepository.delete('some_string_key');
 
-    await storageRepository.print();
+    await storageRepository.log();
 
     await storageRepository.clear();
 }
