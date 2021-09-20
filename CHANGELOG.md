@@ -1,3 +1,6 @@
+## [1.0.7] 
+* Removed unused logging
+
 ## [1.0.6] 
 * Hive
 

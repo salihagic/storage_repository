@@ -18,8 +18,6 @@ class StorageRepository implements IStorageRepository {
   ///initialization of an instance of this class
   @override
   Future<IStorageRepository> init() async {
-    developer
-        .log('INITIALIZING STORAGE REPOSITORY IN storage_repository PACKAGE');
     await Hive.initFlutter();
     _storage = await Hive.openBox(key);
 

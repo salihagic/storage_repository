@@ -1,6 +1,6 @@
 name: storage_repository
 description: Abstraction for reading and persisting data to platform specific storage.
-version: 1.0.6
+version: 1.0.7
 repository: https://github.com/salihagic/storage_repository
 
 environment:
