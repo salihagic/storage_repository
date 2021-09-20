@@ -18,7 +18,8 @@ class StorageRepository implements IStorageRepository {
   ///initialization of an instance of this class
   @override
   Future<IStorageRepository> init() async {
-    developer.log('INITIALIZING STORAGE REPOSITORY IN storage_repository PACKAGE');
+    developer
+        .log('INITIALIZING STORAGE REPOSITORY IN storage_repository PACKAGE');
     await Hive.initFlutter();
     _storage = await Hive.openBox(key);
 
@@ -103,13 +104,16 @@ class StorageRepository implements IStorageRepository {
   Future<String> asString() async {
     final StringBuffer stringBuffer = StringBuffer();
 
-    stringBuffer.write('\n----------------------------------------------------------------------------------------');
+    stringBuffer.write(
+        '\n----------------------------------------------------------------------------------------');
     stringBuffer.write('\nStorage repository data:');
-    stringBuffer.write('\n----------------------------------------------------------------------------------------');
+    stringBuffer.write(
+        '\n----------------------------------------------------------------------------------------');
     _storage.keys.forEach((key) {
       stringBuffer.write('\n\n$key: ${_storage.get(key)}');
     });
-    stringBuffer.write('\n----------------------------------------------------------------------------------------');
+    stringBuffer.write(
+        '\n----------------------------------------------------------------------------------------');
 
     return stringBuffer.toString();
   }

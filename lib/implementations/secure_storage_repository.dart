@@ -20,7 +20,8 @@ class SecureStorageRepository implements IStorageRepository {
   @override
   Future<bool> set<T>(dynamic key, T value) async {
     if (key != null) {
-      await _storage.write(key: json.encode(key), value: json.encode(value ?? ''));
+      await _storage.write(
+          key: json.encode(key), value: json.encode(value ?? ''));
     }
 
     return true;
@@ -67,13 +68,16 @@ class SecureStorageRepository implements IStorageRepository {
   Future<String> asString() async {
     final StringBuffer stringBuffer = StringBuffer();
 
-    stringBuffer.write('\n----------------------------------------------------------------------------------------');
+    stringBuffer.write(
+        '\n----------------------------------------------------------------------------------------');
     stringBuffer.write('\nSecure storage repository data:');
-    stringBuffer.write('\n----------------------------------------------------------------------------------------');
+    stringBuffer.write(
+        '\n----------------------------------------------------------------------------------------');
     (await _storage.readAll()).forEach((key, value) {
       stringBuffer.write('\n\n$key: $value');
     });
-    stringBuffer.write('\n----------------------------------------------------------------------------------------');
+    stringBuffer.write(
+        '\n----------------------------------------------------------------------------------------');
 
     return stringBuffer.toString();
   }
