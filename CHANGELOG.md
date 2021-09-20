@@ -1,3 +1,6 @@
+## [1.0.6] 
+* Hive
+
 ## [1.0.5] 
 * Added asString method and print renamed to log
 
