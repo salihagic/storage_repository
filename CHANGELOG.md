@@ -1,3 +1,6 @@
+## [1.0.8] 
+* Fixed legacy storage copy
+
 ## [1.0.7] 
 * Removed unused logging
 

@@ -9,6 +9,7 @@ import 'package:storage_repository/interfaces/i_storage_repository.dart';
 ///A basic implementation of IStorageRepository
 ///Don't use in case you want to persist some sensitive data like user tokens
 class StorageRepository implements IStorageRepository {
+  static bool _initialized = false;
   late Box _storage;
   late final String key;
 
@@ -18,25 +19,16 @@ class StorageRepository implements IStorageRepository {
   ///initialization of an instance of this class
   @override
   Future<IStorageRepository> init() async {
-    await Hive.initFlutter();
+    if (!_initialized) {
+      await Hive.initFlutter();
+      _initialized = true;
+    }
+
     _storage = await Hive.openBox(key);
 
     await _copyDataFromLegacyStorage();
 
     return this;
-  }
-
-  Future _copyDataFromLegacyStorage() async {
-    final sharedPreferences = await SharedPreferences.getInstance();
-    final keys = sharedPreferences.getKeys();
-
-    if (keys.isNotEmpty) {
-      keys.forEach((key) {
-        final value = sharedPreferences.getString(key);
-        _storage.put(key, value);
-        sharedPreferences.remove(key);
-      });
-    }
   }
 
   ///Method that is used to save data to device's storage
@@ -114,5 +106,21 @@ class StorageRepository implements IStorageRepository {
         '\n----------------------------------------------------------------------------------------');
 
     return stringBuffer.toString();
+  }
+
+  Future _copyDataFromLegacyStorage() async {
+    final sharedPreferences = await SharedPreferences.getInstance();
+    final keys = sharedPreferences.getKeys();
+
+    if (keys.isNotEmpty) {
+      keys.forEach((key) async {
+        final existsInTheBox = await contains(key);
+
+        if (!existsInTheBox) {
+          final value = sharedPreferences.getString(key);
+          await set(key, value);
+        }
+      });
+    }
   }
 }
