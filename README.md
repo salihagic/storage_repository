@@ -6,6 +6,8 @@ You can also find this package on pub as [storage_repository](https://pub.dev/pa
 ```
 Future main() async {
     WidgetsFlutterBinding.ensureInitialized();
+    //This must be called once per application lifetime
+    await StorageRepository.initFlutter();
 
     //Instantiate a basic storage repository
     IStorageRepository storageRepository = StorageRepository();

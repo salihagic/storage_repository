@@ -89,13 +89,16 @@ class StorageRepository implements IStorageRepository {
   Future<String> asString() async {
     final StringBuffer stringBuffer = StringBuffer();
 
-    stringBuffer.write('\n----------------------------------------------------------------------------------------');
+    stringBuffer.write(
+        '\n----------------------------------------------------------------------------------------');
     stringBuffer.write('\nStorage repository data:');
-    stringBuffer.write('\n----------------------------------------------------------------------------------------');
+    stringBuffer.write(
+        '\n----------------------------------------------------------------------------------------');
     _storage.keys.forEach((key) {
       stringBuffer.write('\n\n$key: ${_storage.get(key)}');
     });
-    stringBuffer.write('\n----------------------------------------------------------------------------------------');
+    stringBuffer.write(
+        '\n----------------------------------------------------------------------------------------');
 
     return stringBuffer.toString();
   }

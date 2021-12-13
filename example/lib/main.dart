@@ -5,6 +5,9 @@ const KEY = 'COUNTER_VALUE';
 
 Future main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  //This must be called once per application lifetime
+  await StorageRepository.initFlutter();
+
   final storageRepository = StorageRepository();
   //or
   //final storageRepository = SecureStorageRepository();
