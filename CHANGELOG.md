@@ -1,3 +1,9 @@
+## [1.0.9] 
+* Refactoring
+
+## [1.0.8] 
+* Updated legacy storage copy 
+
 ## [1.0.7] 
 * Removed unused logging
 

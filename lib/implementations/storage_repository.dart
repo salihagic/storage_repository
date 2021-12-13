@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:storage_repository/interfaces/i_storage_repository.dart';
 
 ///A basic implementation of IStorageRepository
@@ -18,25 +17,9 @@ class StorageRepository implements IStorageRepository {
   ///initialization of an instance of this class
   @override
   Future<IStorageRepository> init() async {
-    await Hive.initFlutter();
     _storage = await Hive.openBox(key);
 
-    await _copyDataFromLegacyStorage();
-
     return this;
-  }
-
-  Future _copyDataFromLegacyStorage() async {
-    final sharedPreferences = await SharedPreferences.getInstance();
-    final keys = sharedPreferences.getKeys();
-
-    if (keys.isNotEmpty) {
-      keys.forEach((key) {
-        final value = sharedPreferences.getString(key);
-        _storage.put(key, value);
-        sharedPreferences.remove(key);
-      });
-    }
   }
 
   ///Method that is used to save data to device's storage
