@@ -1,7 +1,6 @@
 import 'dart:developer' as developer;
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:storage_repository/interfaces/i_storage_repository.dart';
 
@@ -12,6 +11,10 @@ class StorageRepository implements IStorageRepository {
   late final String key;
 
   StorageRepository({this.key = 'DEFAULT_BOX'});
+
+  static Future<void> initFlutter() async {
+    await Hive.initFlutter();
+  }
 
   ///Method that should be called right after the
   ///initialization of an instance of this class
@@ -32,6 +35,7 @@ class StorageRepository implements IStorageRepository {
     } catch (e) {
       debugPrint('StorageRepository Exception: $e');
     }
+
     return false;
   }
 
@@ -85,16 +89,13 @@ class StorageRepository implements IStorageRepository {
   Future<String> asString() async {
     final StringBuffer stringBuffer = StringBuffer();
 
-    stringBuffer.write(
-        '\n----------------------------------------------------------------------------------------');
+    stringBuffer.write('\n----------------------------------------------------------------------------------------');
     stringBuffer.write('\nStorage repository data:');
-    stringBuffer.write(
-        '\n----------------------------------------------------------------------------------------');
+    stringBuffer.write('\n----------------------------------------------------------------------------------------');
     _storage.keys.forEach((key) {
       stringBuffer.write('\n\n$key: ${_storage.get(key)}');
     });
-    stringBuffer.write(
-        '\n----------------------------------------------------------------------------------------');
+    stringBuffer.write('\n----------------------------------------------------------------------------------------');
 
     return stringBuffer.toString();
   }
