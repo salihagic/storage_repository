@@ -1,3 +1,6 @@
+## [1.0.12] 
+* Upgraded dependencies
+
 ## [1.0.11] 
 * Refactoring
 
