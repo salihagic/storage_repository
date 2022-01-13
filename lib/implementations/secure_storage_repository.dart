@@ -25,4 +25,21 @@ class SecureStorageRepository extends StorageRepository
 
   /// Generates strong 32 byte (256 bit) encryption key for secure storage
   static List<int> generateSecureKey() => Hive.generateSecureKey();
+
+  @override
+  Future<String> asString() async {
+    final StringBuffer stringBuffer = StringBuffer();
+
+    stringBuffer.write(
+        '\n----------------------------------------------------------------------------------------');
+    stringBuffer.write('\nSecure storage repository data:');
+    stringBuffer.write(
+        '\n----------------------------------------------------------------------------------------');
+    (await getAll())
+        .forEach((key, value) => stringBuffer.write('\n\n$key: $value'));
+    stringBuffer.write(
+        '\n----------------------------------------------------------------------------------------');
+
+    return stringBuffer.toString();
+  }
 }

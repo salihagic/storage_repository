@@ -21,7 +21,6 @@ class StorageRepository implements IStorageRepository {
   @override
   Future<IStorageRepository> init() async {
     storage = await Hive.openBox(key);
-
     return this;
   }
 
@@ -45,6 +44,26 @@ class StorageRepository implements IStorageRepository {
     if (key == null) return null;
     final value = storage.get(json.encode(key));
     return value != null ? json.decode(value) : null;
+  }
+
+  ///Method used to get all key-value pairs
+  @override
+  Future<Map<dynamic, E?>> getAll<E>() async {
+    final entries = storage.keys.map(
+      (key) {
+        final decodedKey = json.decode(key);
+        final value = decodedKey != null ? storage.get(decodedKey) : null;
+        final decodedValue = value != null ? json.decode(value) : null;
+
+        print('decodedKey: $decodedKey');
+        print('value: $value');
+        print('decodedValue: $decodedValue\n\n');
+
+        return MapEntry<dynamic, E?>(decodedKey, decodedValue);
+      },
+    );
+
+    return Map.fromEntries(entries);
   }
 
   ///Method that checks exsistance of data under a given key
@@ -94,9 +113,8 @@ class StorageRepository implements IStorageRepository {
     stringBuffer.write('\nStorage repository data:');
     stringBuffer.write(
         '\n----------------------------------------------------------------------------------------');
-    storage.keys.forEach((key) {
-      stringBuffer.write('\n\n$key: ${storage.get(key)}');
-    });
+    (await getAll())
+        .forEach((key, value) => stringBuffer.write('\n\n$key: $value'));
     stringBuffer.write(
         '\n----------------------------------------------------------------------------------------');
 

@@ -10,6 +10,9 @@ abstract class IStorageRepository {
   ///Method declaration to get the data by a given key
   Future<T?> get<T>(dynamic key);
 
+  ///Method declaration to get all data
+  Future<Map<dynamic, E?>> getAll<E>();
+
   ///Method declaration for checking the existance of saved
   ///data under a given key
   Future<bool> contains(dynamic key);

@@ -1,3 +1,6 @@
+## [1.1.1] 
+* Added getAll method to fetch all data
+
 ## [1.1.0] 
 * Secure storage repository migrated from flutter_secure_storage to hive with encryption key
 
