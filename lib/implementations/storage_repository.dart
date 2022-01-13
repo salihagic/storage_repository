@@ -51,15 +51,10 @@ class StorageRepository implements IStorageRepository {
   Future<Map<dynamic, E?>> getAll<E>() async {
     final entries = storage.keys.map(
       (key) {
-        final decodedKey = json.decode(key);
-        final value = decodedKey != null ? storage.get(decodedKey) : null;
+        final value = storage.get(key);
         final decodedValue = value != null ? json.decode(value) : null;
 
-        print('decodedKey: $decodedKey');
-        print('value: $value');
-        print('decodedValue: $decodedValue\n\n');
-
-        return MapEntry<dynamic, E?>(decodedKey, decodedValue);
+        return MapEntry<dynamic, E?>(json.decode(key), decodedValue);
       },
     );
 

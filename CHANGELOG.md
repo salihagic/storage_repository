@@ -1,3 +1,6 @@
+## [1.1.2] 
+* Encode key
+
 ## [1.1.1] 
 * Added getAll method to fetch all data
 
