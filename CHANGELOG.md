@@ -1,3 +1,6 @@
+## [1.1.3] 
+* Encryption key logic fix
+
 ## [1.1.2] 
 * Encode key
 
