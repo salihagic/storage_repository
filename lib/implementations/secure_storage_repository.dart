@@ -23,7 +23,7 @@ class SecureStorageRepository extends StorageRepository
     final encryptionKeyStorageKey = json.encode(AppKeys.encryptionKey);
 
     final containsEncryptionKey =
-        await flutterSecureStorage.containsKey(key: encryptionKeyStorageKey);
+        await flutterSecureStorage.read(key: encryptionKeyStorageKey) != null;
 
     if (!containsEncryptionKey) {
       final secureEncryptionKey =

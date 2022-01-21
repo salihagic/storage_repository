@@ -1,3 +1,6 @@
+## [1.1.4] 
+* Contains key fix
+
 ## [1.1.3] 
 * Encryption key logic fix
 
