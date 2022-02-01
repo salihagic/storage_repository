@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hive/hive.dart';
 import 'package:storage_repository/constants/_all.dart';
@@ -22,8 +23,14 @@ class SecureStorageRepository extends StorageRepository
   Future<IStorageRepository> init() async {
     final encryptionKeyStorageKey = json.encode(AppKeys.encryptionKey);
 
-    final containsEncryptionKey =
-        await flutterSecureStorage.read(key: encryptionKeyStorageKey) != null;
+    var containsEncryptionKey = false;
+
+    try {
+      containsEncryptionKey =
+          await flutterSecureStorage.read(key: encryptionKeyStorageKey) != null;
+    } on PlatformException catch (_) {
+      await flutterSecureStorage.deleteAll();
+    }
 
     if (!containsEncryptionKey) {
       final secureEncryptionKey =

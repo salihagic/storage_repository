@@ -10,7 +10,7 @@ Future main() async {
 
   final storageRepository = StorageRepository();
   //or
-  //final storageRepository = SecureStorageRepository(encryptionKey: [132,111,33123,1321,3231,321,3,1245,165,23,634,6712,24]);
+  //final storageRepository = SecureStorageRepository();
   await storageRepository.init();
 
   runApp(

@@ -1,3 +1,6 @@
+## [1.1.5] 
+* Flutter secure storage fix
+
 ## [1.1.4] 
 * Contains key fix
 
