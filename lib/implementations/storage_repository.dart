@@ -2,15 +2,22 @@ import 'dart:developer' as developer;
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:storage_repository/constants/storage_repository_keys.dart';
 import 'package:storage_repository/interfaces/i_storage_repository.dart';
+import 'package:storage_repository/key_encoder/json_key_encoder.dart';
+import 'package:storage_repository/key_encoder/key_encoder.dart';
 
 ///A basic implementation of IStorageRepository
 ///Don't use in case you want to persist some sensitive data like user tokens
 class StorageRepository implements IStorageRepository {
   late Box storage;
   late final String key;
+  final KeyEncoder keyEncoder;
 
-  StorageRepository({this.key = 'DEFAULT_BOX'});
+  StorageRepository({
+    this.key = StorageRepositoryKeys.defaultBoxKey,
+    this.keyEncoder = const JsonKeyEncoder(),
+  });
 
   static Future<void> initFlutter() async {
     await Hive.initFlutter();
@@ -103,15 +110,11 @@ class StorageRepository implements IStorageRepository {
   Future<String> asString() async {
     final StringBuffer stringBuffer = StringBuffer();
 
-    stringBuffer.write(
-        '\n----------------------------------------------------------------------------------------');
+    stringBuffer.write('\n----------------------------------------------------------------------------------------');
     stringBuffer.write('\nStorage repository data:');
-    stringBuffer.write(
-        '\n----------------------------------------------------------------------------------------');
-    (await getAll())
-        .forEach((key, value) => stringBuffer.write('\n\n$key: $value'));
-    stringBuffer.write(
-        '\n----------------------------------------------------------------------------------------');
+    stringBuffer.write('\n----------------------------------------------------------------------------------------');
+    (await getAll()).forEach((key, value) => stringBuffer.write('\n\n$key: $value'));
+    stringBuffer.write('\n----------------------------------------------------------------------------------------');
 
     return stringBuffer.toString();
   }
