@@ -1,7 +1,7 @@
 import 'dart:developer' as developer;
-import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:storage_repository/constants/storage_repository_keys.dart';
 import 'package:storage_repository/interfaces/i_storage_repository.dart';
 
 ///A basic implementation of IStorageRepository
@@ -9,8 +9,12 @@ import 'package:storage_repository/interfaces/i_storage_repository.dart';
 class StorageRepository implements IStorageRepository {
   late Box storage;
   late final String key;
+  final String logPrefix;
 
-  StorageRepository({this.key = 'DEFAULT_BOX'});
+  StorageRepository({
+    this.key = StorageRepositoryKeys.defaultBoxKey,
+    this.logPrefix = StorageRepositoryKeys.defaultStorageRepositoryLogPrefix,
+  });
 
   static Future<void> initFlutter() async {
     await Hive.initFlutter();
@@ -28,11 +32,11 @@ class StorageRepository implements IStorageRepository {
   @override
   Future<bool> set<T>(dynamic key, T value) async {
     try {
-      await storage.put(json.encode(key), json.encode(value ?? ''));
+      await storage.put(key, value);
 
       return true;
     } catch (e) {
-      debugPrint('StorageRepository Exception: $e');
+      debugPrint('$logPrefix exception: $e');
     }
 
     return false;
@@ -42,8 +46,8 @@ class StorageRepository implements IStorageRepository {
   @override
   Future<E?> get<E>(dynamic key) async {
     if (key == null) return null;
-    final value = storage.get(json.encode(key));
-    return value != null ? json.decode(value) : null;
+    final value = storage.get(key);
+    return value != null ? value : null;
   }
 
   ///Method used to get all key-value pairs
@@ -52,9 +56,9 @@ class StorageRepository implements IStorageRepository {
     final entries = storage.keys.map(
       (key) {
         final value = storage.get(key);
-        final decodedValue = value != null ? json.decode(value) : null;
+        final decodedValue = value != null ? value : null;
 
-        return MapEntry<dynamic, E?>(json.decode(key), decodedValue);
+        return MapEntry<dynamic, E?>(key, decodedValue);
       },
     );
 
@@ -64,18 +68,18 @@ class StorageRepository implements IStorageRepository {
   ///Method that checks exsistance of data under a given key
   @override
   Future<bool> contains(dynamic key) async {
-    return key != null && storage.containsKey(json.encode(key));
+    return key != null && storage.containsKey(key);
   }
 
   ///Method that removes an item under a given key
   @override
   Future<bool> delete(dynamic key) async {
     try {
-      await storage.delete(json.encode(key));
+      await storage.delete(key);
 
       return true;
     } catch (e) {
-      debugPrint('StorageRepository Exception: $e');
+      debugPrint('$logPrefix exception: $e');
     }
     return false;
   }
@@ -88,7 +92,7 @@ class StorageRepository implements IStorageRepository {
       await storage.clear();
       return true;
     } catch (e) {
-      debugPrint('StorageRepository Exception: $e');
+      debugPrint('$logPrefix exception: $e');
     }
     return false;
   }
@@ -105,7 +109,7 @@ class StorageRepository implements IStorageRepository {
 
     stringBuffer.write(
         '\n----------------------------------------------------------------------------------------');
-    stringBuffer.write('\nStorage repository data:');
+    stringBuffer.write('\n$logPrefix data:');
     stringBuffer.write(
         '\n----------------------------------------------------------------------------------------');
     (await getAll())

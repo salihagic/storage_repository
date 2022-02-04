@@ -1,5 +1,4 @@
 import 'dart:convert';
-
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hive/hive.dart';
@@ -13,15 +12,18 @@ class SecureStorageRepository extends StorageRepository
     implements IStorageRepository {
   final String key;
   final FlutterSecureStorage flutterSecureStorage = FlutterSecureStorage();
+  final String logPrefix;
 
   SecureStorageRepository({
-    this.key = AppKeys.defaultSecureBoxKey,
+    this.key = StorageRepositoryKeys.defaultSecureBoxKey,
+    this.logPrefix =
+        StorageRepositoryKeys.defaultSecureStorageRepositoryLogPrefix,
   });
 
   ///Method that should be called as soon as possible
   @override
   Future<IStorageRepository> init() async {
-    final encryptionKeyStorageKey = json.encode(AppKeys.encryptionKey);
+    final encryptionKeyStorageKey = StorageRepositoryKeys.encryptionKey;
 
     var containsEncryptionKey = false;
 
@@ -33,14 +35,13 @@ class SecureStorageRepository extends StorageRepository
     }
 
     if (!containsEncryptionKey) {
-      final secureEncryptionKey =
-          json.encode(base64UrlEncode(Hive.generateSecureKey()));
+      final secureEncryptionKey = base64UrlEncode(Hive.generateSecureKey());
       await flutterSecureStorage.write(
           key: encryptionKeyStorageKey, value: secureEncryptionKey);
     }
 
-    final encryptionKeyValue = base64Url.decode(json.decode(
-        await flutterSecureStorage.read(key: encryptionKeyStorageKey) ?? ''));
+    final encryptionKeyValue = base64Url.decode(
+        await flutterSecureStorage.read(key: encryptionKeyStorageKey) ?? '');
 
     storage = await Hive.openBox(key,
         encryptionCipher: HiveAesCipher(encryptionKeyValue));
@@ -57,7 +58,7 @@ class SecureStorageRepository extends StorageRepository
 
     stringBuffer.write(
         '\n----------------------------------------------------------------------------------------');
-    stringBuffer.write('\nSecure storage repository data:');
+    stringBuffer.write('\n$logPrefix repository data:');
     stringBuffer.write(
         '\n----------------------------------------------------------------------------------------');
     (await getAll())
