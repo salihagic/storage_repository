@@ -1,5 +1,4 @@
 import 'dart:convert';
-
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hive/hive.dart';
@@ -9,35 +8,43 @@ import 'package:storage_repository/interfaces/i_storage_repository.dart';
 
 ///A secure implementation of IStorageRepository
 ///Use this implementation in case you want to persist some sensitive data like user tokens
-class SecureStorageRepository extends StorageRepository implements IStorageRepository {
+class SecureStorageRepository extends StorageRepository
+    implements IStorageRepository {
   final String key;
   final FlutterSecureStorage flutterSecureStorage = FlutterSecureStorage();
+  final String logPrefix;
 
   SecureStorageRepository({
     this.key = StorageRepositoryKeys.defaultSecureBoxKey,
+    this.logPrefix =
+        StorageRepositoryKeys.defaultSecureStorageRepositoryLogPrefix,
   });
 
   ///Method that should be called as soon as possible
   @override
   Future<IStorageRepository> init() async {
-    final encryptionKeyStorageKey = json.encode(StorageRepositoryKeys.encryptionKey);
+    final encryptionKeyStorageKey = StorageRepositoryKeys.encryptionKey;
 
     var containsEncryptionKey = false;
 
     try {
-      containsEncryptionKey = await flutterSecureStorage.read(key: encryptionKeyStorageKey) != null;
+      containsEncryptionKey =
+          await flutterSecureStorage.read(key: encryptionKeyStorageKey) != null;
     } on PlatformException catch (_) {
       await flutterSecureStorage.deleteAll();
     }
 
     if (!containsEncryptionKey) {
-      final secureEncryptionKey = json.encode(base64UrlEncode(Hive.generateSecureKey()));
-      await flutterSecureStorage.write(key: encryptionKeyStorageKey, value: secureEncryptionKey);
+      final secureEncryptionKey = base64UrlEncode(Hive.generateSecureKey());
+      await flutterSecureStorage.write(
+          key: encryptionKeyStorageKey, value: secureEncryptionKey);
     }
 
-    final encryptionKeyValue = base64Url.decode(json.decode(await flutterSecureStorage.read(key: encryptionKeyStorageKey) ?? ''));
+    final encryptionKeyValue = base64Url.decode(
+        await flutterSecureStorage.read(key: encryptionKeyStorageKey) ?? '');
 
-    storage = await Hive.openBox(key, encryptionCipher: HiveAesCipher(encryptionKeyValue));
+    storage = await Hive.openBox(key,
+        encryptionCipher: HiveAesCipher(encryptionKeyValue));
 
     return this;
   }
@@ -49,11 +56,15 @@ class SecureStorageRepository extends StorageRepository implements IStorageRepos
   Future<String> asString() async {
     final StringBuffer stringBuffer = StringBuffer();
 
-    stringBuffer.write('\n----------------------------------------------------------------------------------------');
-    stringBuffer.write('\nSecure storage repository data:');
-    stringBuffer.write('\n----------------------------------------------------------------------------------------');
-    (await getAll()).forEach((key, value) => stringBuffer.write('\n\n$key: $value'));
-    stringBuffer.write('\n----------------------------------------------------------------------------------------');
+    stringBuffer.write(
+        '\n----------------------------------------------------------------------------------------');
+    stringBuffer.write('\n$logPrefix repository data:');
+    stringBuffer.write(
+        '\n----------------------------------------------------------------------------------------');
+    (await getAll())
+        .forEach((key, value) => stringBuffer.write('\n\n$key: $value'));
+    stringBuffer.write(
+        '\n----------------------------------------------------------------------------------------');
 
     return stringBuffer.toString();
   }

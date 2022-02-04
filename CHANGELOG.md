@@ -1,3 +1,6 @@
+## [1.1.6] 
+* json encoding of keys and values removed
+
 ## [1.1.5] 
 * Flutter secure storage fix
 
