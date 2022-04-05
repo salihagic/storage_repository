@@ -1,3 +1,6 @@
+## [1.1.7] 
+* Upgraded dependencies and minor bug fixes
+
 ## [1.1.6] 
 * json encoding of keys and values removed
 

@@ -24,7 +24,19 @@ class StorageRepository implements IStorageRepository {
   ///initialization of an instance of this class
   @override
   Future<IStorageRepository> init() async {
-    storage = await Hive.openBox(key);
+    try {
+      storage = await Hive.openBox(key);
+    } catch (e) {
+      print(e);
+      Hive.deleteBoxFromDisk(key);
+
+      try {
+        storage = await Hive.openBox(key);
+      } catch (e) {
+        print(e);
+      }
+    }
+
     return this;
   }
 
