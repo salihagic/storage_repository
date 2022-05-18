@@ -41,7 +41,7 @@ class _HomeState extends State<Home> {
   }
 
   Future<int> getCurrentValue() async {
-    return await widget.storageRepository.get<int>(KEY) ?? 0;
+    return await widget.storageRepository.get(KEY) ?? 0;
   }
 
   Future setNewValue(int value) async {

@@ -42,35 +42,46 @@ class StorageRepository implements IStorageRepository {
 
   ///Method that is used to save data to device's storage
   @override
-  Future<bool> set<T>(dynamic key, T value) async {
+  Future<bool> set(dynamic key, dynamic value) async {
     try {
       await storage.put(key, value);
 
       return true;
     } catch (e) {
       debugPrint('$logPrefix exception: $e');
-    }
 
-    return false;
+      return false;
+    }
   }
 
   ///Method used to get the value saved under a given key
   @override
-  Future<E?> get<E>(dynamic key) async {
-    if (key == null) return null;
-    final value = storage.get(key);
-    return value != null ? value : null;
+  dynamic get(dynamic key) {
+    try {
+      if (key == null) {
+        return null;
+      }
+
+      final value = storage.get(key);
+
+      return value is Map
+          ? value.map((key, value) => MapEntry<String, dynamic>(key, value))
+          : value;
+    } catch (e) {
+      debugPrint(e.toString());
+
+      return null;
+    }
   }
 
   ///Method used to get all key-value pairs
   @override
-  Future<Map<dynamic, E?>> getAll<E>() async {
+  Future<Map<String, dynamic>> getAll() async {
     final entries = storage.keys.map(
       (key) {
         final value = storage.get(key);
-        final decodedValue = value != null ? value : null;
 
-        return MapEntry<dynamic, E?>(key, decodedValue);
+        return MapEntry<String, dynamic>(key, value);
       },
     );
 
@@ -92,8 +103,9 @@ class StorageRepository implements IStorageRepository {
       return true;
     } catch (e) {
       debugPrint('$logPrefix exception: $e');
+
+      return false;
     }
-    return false;
   }
 
   ///Use carefully
@@ -102,11 +114,13 @@ class StorageRepository implements IStorageRepository {
   Future<bool> clear() async {
     try {
       await storage.clear();
+
       return true;
     } catch (e) {
       debugPrint('$logPrefix exception: $e');
+
+      return false;
     }
-    return false;
   }
 
   ///Info method used for logging all the data to a console
