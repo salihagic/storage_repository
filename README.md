@@ -12,7 +12,7 @@ Future main() async {
     //Instantiate a basic storage repository
     IStorageRepository storageRepository = StorageRepository();
     //or use a secure version of storage repository
-    //final storageRepository = SecureStorageRepository(encryptionKey: [132,111,33123,1321,3231,321,3,1245,165,23,634,6712,24]);
+    //final storageRepository = SecureStorageRepository();
     //init must be called, preferably right after the instantiation
     await storageRepository.init();
 
@@ -31,7 +31,7 @@ Future main() async {
     print(await storageRepository.get(1));
 
     //result: 1 (int?)
-    print(await storageRepository.get<int>(1));
+    print(await storageRepository.get(1));
 
     await storageRepository.delete('some_string_key');
 

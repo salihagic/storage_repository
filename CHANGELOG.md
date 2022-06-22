@@ -1,5 +1,8 @@
-## [1.1.8] 
+## [1.1.9] 
 * Licence update
+
+## [1.1.8] 
+* Return types modified
 
 ## [1.1.7] 
 * Upgraded dependencies and minor bug fixes

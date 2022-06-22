@@ -5,13 +5,13 @@ abstract class IStorageRepository {
   Future<IStorageRepository> init();
 
   ///Method declaration for saving the data under a given key
-  Future<bool> set<T>(dynamic key, T value);
+  Future<bool> set(String key, dynamic value);
 
   ///Method declaration to get the data by a given key
-  Future<T?> get<T>(dynamic key);
+  dynamic get(dynamic key);
 
   ///Method declaration to get all data
-  Future<Map<dynamic, E?>> getAll<E>();
+  Future<Map<String, dynamic>> getAll();
 
   ///Method declaration for checking the existance of saved
   ///data under a given key
