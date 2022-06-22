@@ -1,3 +1,6 @@
+## [1.1.8] 
+* Licence update
+
 ## [1.1.7] 
 * Upgraded dependencies and minor bug fixes
 
