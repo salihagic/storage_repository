@@ -1,3 +1,9 @@
+## [1.1.10] 
+* Upgraded dependencies
+
+## [1.1.9] 
+* Licence update
+
 ## [1.1.8] 
 * Return types modified
 
