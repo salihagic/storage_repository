@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:developer' as developer;
 import 'package:flutter/foundation.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -44,7 +45,9 @@ class StorageRepository implements IStorageRepository {
   @override
   Future<bool> set(dynamic key, dynamic value) async {
     try {
-      await storage.put(key, value);
+      final encodedValue = json.encode(value);
+
+      await storage.put(key, encodedValue);
 
       return true;
     } catch (e) {
@@ -62,11 +65,9 @@ class StorageRepository implements IStorageRepository {
         return null;
       }
 
-      final value = storage.get(key);
+      final value = json.decode(storage.get(key));
 
-      return value is Map
-          ? value.map((key, value) => MapEntry<String, dynamic>(key, value))
-          : value;
+      return value;
     } catch (e) {
       debugPrint(e.toString());
 

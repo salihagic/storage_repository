@@ -1,3 +1,6 @@
+## [1.1.11] 
+* Encoding values
+
 ## [1.1.10] 
 * Upgraded dependencies
 
