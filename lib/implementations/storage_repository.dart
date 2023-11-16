@@ -65,7 +65,13 @@ class StorageRepository implements IStorageRepository {
         return null;
       }
 
-      final value = json.decode(storage.get(key));
+      final encodedValue = storage.get(key);
+
+      if (encodedValue == null || encodedValue is! String) {
+        return encodedValue;
+      }
+
+      final value = json.decode(encodedValue);
 
       return value;
     } catch (e) {
@@ -80,9 +86,14 @@ class StorageRepository implements IStorageRepository {
   Future<Map<String, dynamic>> getAll() async {
     final entries = storage.keys.map(
       (key) {
-        final value = storage.get(key);
+        final encodedValue = storage.get(key);
 
-        return MapEntry<String, dynamic>(key, value);
+        return MapEntry<String, dynamic>(
+          key,
+          (encodedValue == null || encodedValue is! String)
+              ? encodedValue
+              : json.decode(encodedValue),
+        );
       },
     );
 

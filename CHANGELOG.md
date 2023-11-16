@@ -1,3 +1,6 @@
+## [1.1.12] 
+* Decode error fixed
+
 ## [1.1.11] 
 * Encoding values
 
