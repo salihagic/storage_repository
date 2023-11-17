@@ -8,9 +8,9 @@ Future main() async {
   //This must be called once per application lifetime
   await StorageRepository.initFlutter();
 
-  final storageRepository = StorageRepository();
+  final storageRepository = StorageRepositoryImpl();
   //or
-  //final storageRepository = SecureStorageRepository();
+  //final storageRepository = SecureStorageRepositoryImpl();
   await storageRepository.init();
 
   runApp(
@@ -23,7 +23,7 @@ Future main() async {
 }
 
 class Home extends StatefulWidget {
-  final IStorageRepository storageRepository;
+  final StorageRepository storageRepository;
 
   Home({required this.storageRepository});
 

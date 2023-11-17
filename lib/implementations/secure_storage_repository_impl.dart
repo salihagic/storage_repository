@@ -3,26 +3,26 @@ import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hive/hive.dart';
 import 'package:storage_repository/constants/_all.dart';
-import 'package:storage_repository/implementations/storage_repository.dart';
-import 'package:storage_repository/interfaces/i_storage_repository.dart';
+import 'package:storage_repository/implementations/storage_repository_impl.dart';
+import 'package:storage_repository/interfaces/storage_repository.dart';
 
 ///A secure implementation of IStorageRepository
 ///Use this implementation in case you want to persist some sensitive data like user tokens
-class SecureStorageRepository extends StorageRepository
-    implements IStorageRepository {
+class SecureStorageRepositoryImpl extends StorageRepositoryImpl
+    implements StorageRepository {
   final String key;
   final FlutterSecureStorage flutterSecureStorage = FlutterSecureStorage();
   final String logPrefix;
 
-  SecureStorageRepository({
+  SecureStorageRepositoryImpl({
     this.key = StorageRepositoryKeys.defaultSecureBoxKey,
     this.logPrefix =
-        StorageRepositoryKeys.defaultSecureStorageRepositoryLogPrefix,
+        StorageRepositoryKeys.defaultSecureStorageRepositoryImplLogPrefix,
   });
 
   ///Method that should be called as soon as possible
   @override
-  Future<IStorageRepository> init() async {
+  Future<StorageRepository> init() async {
     final encryptionKeyStorageKey = StorageRepositoryKeys.encryptionKey;
 
     var containsEncryptionKey = false;

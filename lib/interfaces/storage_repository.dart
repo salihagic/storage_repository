@@ -1,8 +1,10 @@
+import 'package:hive_flutter/hive_flutter.dart';
+
 ///Abstract class for Storage repository to serve as
 ///an interface when using DI pattern
-abstract class IStorageRepository {
+abstract class StorageRepository {
   ///Method declaration for initializing the storage
-  Future<IStorageRepository> init();
+  Future<StorageRepository> init();
 
   ///Method declaration for saving the data under a given key
   Future<bool> set(String key, dynamic value);
@@ -28,4 +30,6 @@ abstract class IStorageRepository {
 
   ///Method declaration for a method that should clear all the data
   Future clear();
+
+  static Future<void> initFlutter() async => await Hive.initFlutter();
 }

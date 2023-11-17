@@ -3,28 +3,24 @@ import 'dart:developer' as developer;
 import 'package:flutter/foundation.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:storage_repository/constants/storage_repository_keys.dart';
-import 'package:storage_repository/interfaces/i_storage_repository.dart';
+import 'package:storage_repository/interfaces/storage_repository.dart';
 
 ///A basic implementation of IStorageRepository
 ///Don't use in case you want to persist some sensitive data like user tokens
-class StorageRepository implements IStorageRepository {
+class StorageRepositoryImpl implements StorageRepository {
   late Box storage;
   late final String key;
   final String logPrefix;
 
-  StorageRepository({
+  StorageRepositoryImpl({
     this.key = StorageRepositoryKeys.defaultBoxKey,
     this.logPrefix = StorageRepositoryKeys.defaultStorageRepositoryLogPrefix,
   });
 
-  static Future<void> initFlutter() async {
-    await Hive.initFlutter();
-  }
-
   ///Method that should be called right after the
   ///initialization of an instance of this class
   @override
-  Future<IStorageRepository> init() async {
+  Future<StorageRepository> init() async {
     try {
       storage = await Hive.openBox(key);
     } catch (e) {

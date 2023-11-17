@@ -12,7 +12,7 @@ Future main() async {
     //Instantiate a basic storage repository
     IStorageRepository storageRepository = StorageRepository();
     //or use a secure version of storage repository
-    //final storageRepository = SecureStorageRepository();
+    //final storageRepository = SecureStorageRepositoryImpl();
     //init must be called, preferably right after the instantiation
     await storageRepository.init();
 

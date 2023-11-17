@@ -1,3 +1,6 @@
+## [1.1.13] 
+* Updated naming convention (I<something> -> <something>Impl)
+
 ## [1.1.12] 
 * Decode error fixed
 
@@ -68,7 +71,7 @@
 * Replaced SharedPreferences with Hive
 
 ## [1.0.1] 
-* New implementation, SecureStorageRepository
+* New implementation, SecureStorageRepositoryImpl
 
 ## [1.0.0] 
 * Stable
