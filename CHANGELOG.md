@@ -1,3 +1,6 @@
+## [1.1.14] 
+* Updated dependencies
+
 ## [1.1.13] 
 * Updated naming convention (I<something> -> <something>Impl)
 
