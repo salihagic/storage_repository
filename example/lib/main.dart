@@ -13,7 +13,13 @@ Future main() async {
   //final storageRepository = SecureStorageRepositoryImpl();
   await storageRepository.init();
 
-  runApp(MaterialApp(title: 'Storage repository example', theme: ThemeData(primarySwatch: Colors.blue), home: Home(storageRepository: storageRepository)));
+  runApp(
+    MaterialApp(
+      title: 'Storage repository example',
+      theme: ThemeData(primarySwatch: Colors.blue),
+      home: Home(storageRepository: storageRepository),
+    ),
+  );
 }
 
 class Home extends StatefulWidget {
@@ -51,6 +57,21 @@ class _HomeState extends State<Home> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(appBar: AppBar(title: Text('Storage repository counter')), body: Center(child: Column(mainAxisSize: MainAxisSize.min, children: [Text('You have clicked increment button this many times:'), Text(_currentValue.toString(), style: TextStyle(fontSize: 26.0))])), floatingActionButton: FloatingActionButton(onPressed: onPressed, child: Icon(Icons.add)));
+    return Scaffold(
+      appBar: AppBar(title: Text('Storage repository counter')),
+      body: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('You have clicked increment button this many times:'),
+            Text(_currentValue.toString(), style: TextStyle(fontSize: 26.0)),
+          ],
+        ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: onPressed,
+        child: Icon(Icons.add),
+      ),
+    );
   }
 }

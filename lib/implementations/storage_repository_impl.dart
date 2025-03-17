@@ -86,7 +86,9 @@ class StorageRepositoryImpl implements StorageRepository {
 
         return MapEntry<String, dynamic>(
           key,
-          (encodedValue == null || encodedValue is! String) ? encodedValue : json.decode(encodedValue),
+          (encodedValue == null || encodedValue is! String)
+              ? encodedValue
+              : json.decode(encodedValue),
         );
       },
     );
@@ -139,11 +141,15 @@ class StorageRepositoryImpl implements StorageRepository {
   Future<String> asString() async {
     final StringBuffer stringBuffer = StringBuffer();
 
-    stringBuffer.write('\n----------------------------------------------------------------------------------------');
+    stringBuffer.write(
+        '\n----------------------------------------------------------------------------------------');
     stringBuffer.write('\n$logPrefix data:');
-    stringBuffer.write('\n----------------------------------------------------------------------------------------');
-    (await getAll()).forEach((key, value) => stringBuffer.write('\n\n$key: $value'));
-    stringBuffer.write('\n----------------------------------------------------------------------------------------');
+    stringBuffer.write(
+        '\n----------------------------------------------------------------------------------------');
+    (await getAll())
+        .forEach((key, value) => stringBuffer.write('\n\n$key: $value'));
+    stringBuffer.write(
+        '\n----------------------------------------------------------------------------------------');
 
     return stringBuffer.toString();
   }
