@@ -1,3 +1,7 @@
+## 1.1.17
+
+* Shrunk example size
+
 ## [1.1.16] 
 * Updated dependencies
 
