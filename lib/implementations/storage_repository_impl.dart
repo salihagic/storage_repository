@@ -5,55 +5,80 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:storage_repository/constants/storage_repository_keys.dart';
 import 'package:storage_repository/interfaces/storage_repository.dart';
 
-///A basic implementation of IStorageRepository
-///Don't use in case you want to persist some sensitive data like user tokens
+/// A basic implementation of [StorageRepository].
+///
+/// This class provides a non-secure storage solution using Hive.
+/// It should NOT be used for storing sensitive data, such as user tokens.
+///
+/// It allows storing, retrieving, and managing data efficiently in a local database.
 class StorageRepositoryImpl implements StorageRepository {
+  /// Hive storage box instance.
   late Box storage;
+
+  /// Key used to identify the storage box.
   late final String key;
+
+  /// Prefix used in log messages to identify storage-related logs.
   final String logPrefix;
 
+  /// Constructor for `StorageRepositoryImpl`.
+  ///
+  /// - [key]: The storage box key, used for retrieving the correct Hive storage.
+  /// - [logPrefix]: Prefix for log messages.
   StorageRepositoryImpl({
     this.key = StorageRepositoryKeys.defaultBoxKey,
     this.logPrefix = StorageRepositoryKeys.defaultStorageRepositoryLogPrefix,
   });
 
-  ///Method that should be called right after the
-  ///initialization of an instance of this class
+  /// Initializes the storage repository.
+  ///
+  /// This method should be called immediately after creating an instance of this class.
+  /// It attempts to open the Hive box, and in case of failure, it resets the storage and retries.
+  ///
+  /// Returns an instance of [StorageRepository] once initialized.
   @override
   Future<StorageRepository> init() async {
     try {
+      // Attempt to open the Hive storage box.
       storage = await Hive.openBox(key);
     } catch (e) {
       debugPrint(e.toString());
-      Hive.deleteBoxFromDisk(key);
 
+      // If an error occurs, delete the storage box and retry opening it.
+      Hive.deleteBoxFromDisk(key);
       try {
         storage = await Hive.openBox(key);
       } catch (e) {
         debugPrint(e.toString());
       }
     }
-
     return this;
   }
 
-  ///Method that is used to save data to device's storage
+  /// Saves a key-value pair to the device's storage.
+  ///
+  /// - [key]: The key to store the data under.
+  /// - [value]: The data to be stored.
+  ///
+  /// Returns `true` if the operation was successful, otherwise `false`.
   @override
   Future<bool> set(dynamic key, dynamic value) async {
     try {
+      // Convert value to JSON format before storing.
       final encodedValue = json.encode(value);
-
       await storage.put(key, encodedValue);
-
       return true;
     } catch (e) {
       debugPrint('$logPrefix exception: $e');
-
       return false;
     }
   }
 
-  ///Method used to get the value saved under a given key
+  /// Retrieves the value stored under the given key.
+  ///
+  /// - [key]: The key for the stored data.
+  ///
+  /// Returns the decoded value if found, otherwise `null`.
   @override
   dynamic get(dynamic key) {
     try {
@@ -61,23 +86,26 @@ class StorageRepositoryImpl implements StorageRepository {
         return null;
       }
 
+      // Retrieve the encoded value from storage.
       final encodedValue = storage.get(key);
 
+      // If value is not found or is not a string, return it as is.
       if (encodedValue == null || encodedValue is! String) {
         return encodedValue;
       }
 
+      // Decode the JSON-encoded value before returning.
       final value = json.decode(encodedValue);
-
       return value;
     } catch (e) {
       debugPrint(e.toString());
-
       return null;
     }
   }
 
-  ///Method used to get all key-value pairs
+  /// Retrieves all stored key-value pairs.
+  ///
+  /// Returns a `Map<String, dynamic>` containing all stored data.
   @override
   Future<Map<String, dynamic>> getAll() async {
     final entries = storage.keys.map(
@@ -96,47 +124,59 @@ class StorageRepositoryImpl implements StorageRepository {
     return Map.fromEntries(entries);
   }
 
-  ///Method that checks exsistance of data under a given key
+  /// Checks if a given key exists in the storage.
+  ///
+  /// - [key]: The key to check.
+  ///
+  /// Returns `true` if the key exists, otherwise `false`.
   @override
   Future<bool> contains(dynamic key) async {
     return key != null && storage.containsKey(key);
   }
 
-  ///Method that removes an item under a given key
+  /// Deletes an item from storage using the given key.
+  ///
+  /// - [key]: The key of the item to delete.
+  ///
+  /// Returns `true` if deletion was successful, otherwise `false`.
   @override
   Future<bool> delete(dynamic key) async {
     try {
       await storage.delete(key);
-
       return true;
     } catch (e) {
       debugPrint('$logPrefix exception: $e');
-
       return false;
     }
   }
 
-  ///Use carefully
-  ///Method that resets the storage, removes all the saved data
+  /// **Use with caution**
+  ///
+  /// Clears all data stored in the repository.
+  ///
+  /// Returns `true` if successful, otherwise `false`.
   @override
   Future<bool> clear() async {
     try {
       await storage.clear();
-
       return true;
     } catch (e) {
       debugPrint('$logPrefix exception: $e');
-
       return false;
     }
   }
 
-  ///Info method used for logging all the data to a console
+  /// Logs all stored data to the console.
+  ///
+  /// Useful for debugging purposes.
   @override
   Future log() async {
     developer.log(await asString());
   }
 
+  /// Returns the stored data as a formatted string.
+  ///
+  /// This method helps in debugging by providing a structured view of the stored key-value pairs.
   @override
   Future<String> asString() async {
     final StringBuffer stringBuffer = StringBuffer();
@@ -146,8 +186,11 @@ class StorageRepositoryImpl implements StorageRepository {
     stringBuffer.write('\n$logPrefix data:');
     stringBuffer.write(
         '\n----------------------------------------------------------------------------------------');
+
+    // Retrieve all stored key-value pairs and format them.
     (await getAll())
         .forEach((key, value) => stringBuffer.write('\n\n$key: $value'));
+
     stringBuffer.write(
         '\n----------------------------------------------------------------------------------------');
 

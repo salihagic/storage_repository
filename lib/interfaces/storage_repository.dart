@@ -1,35 +1,68 @@
 import 'package:hive_flutter/hive_flutter.dart';
 
-///Abstract class for Storage repository to serve as
-///an interface when using DI pattern
+/// Abstract class for the storage repository, serving as an interface
+/// for dependency injection (DI) patterns.
+///
+/// This interface defines methods for interacting with a key-value storage system.
+/// Implementations should provide secure or non-secure data persistence options.
 abstract class StorageRepository {
-  ///Method declaration for initializing the storage
+  /// Initializes the storage repository.
+  ///
+  /// This method should be called before using the storage to ensure it is properly set up.
+  /// Returns an instance of [StorageRepository] once initialization is complete.
   Future<StorageRepository> init();
 
-  ///Method declaration for saving the data under a given key
+  /// Saves a value under the specified key.
+  ///
+  /// - [key]: The key to store the value under.
+  /// - [value]: The data to be stored.
+  ///
+  /// Returns `true` if the operation was successful, otherwise `false`.
   Future<bool> set(String key, dynamic value);
 
-  ///Method declaration to get the data by a given key
+  /// Retrieves the value stored under the specified key.
+  ///
+  /// - [key]: The key to look up.
+  ///
+  /// Returns the stored value if found, otherwise `null`.
   dynamic get(dynamic key);
 
-  ///Method declaration to get all data
+  /// Retrieves all stored key-value pairs.
+  ///
+  /// Returns a `Map<String, dynamic>` containing all stored data.
   Future<Map<String, dynamic>> getAll();
 
-  ///Method declaration for checking the existance of saved
-  ///data under a given key
+  /// Checks whether a given key exists in the storage.
+  ///
+  /// - [key]: The key to check.
+  ///
+  /// Returns `true` if the key exists, otherwise `false`.
   Future<bool> contains(dynamic key);
 
-  ///Method declaration for deleting the data saved under a given key
+  /// Deletes a value stored under the specified key.
+  ///
+  /// - [key]: The key of the item to delete.
+  ///
+  /// Returns `true` if the deletion was successful, otherwise `false`.
   Future<bool> delete(dynamic key);
 
-  ///Method declaration for a method that should log all the data to the console
+  /// Logs all stored data to the console.
+  ///
+  /// Useful for debugging and inspecting stored values.
   Future log();
 
-  ///Method declaration for a method that should return String representation of the data stored in the repository
+  /// Returns a string representation of all stored data.
+  ///
+  /// This method is primarily used for debugging to get a structured view of the stored data.
   Future<String> asString();
 
-  ///Method declaration for a method that should clear all the data
+  /// Clears all stored data in the repository.
+  ///
+  /// **Use with caution**, as this method will permanently delete all stored data.
   Future clear();
 
+  /// Initializes Hive for Flutter.
+  ///
+  /// This method should be called early in the app lifecycle to set up Hive storage.
   static Future<void> initFlutter() async => await Hive.initFlutter();
 }
