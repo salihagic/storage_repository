@@ -1,3 +1,7 @@
+## 1.1.18
+
+* Formatting
+
 ## 1.1.17
 
 * Shrunk example size

@@ -16,11 +16,9 @@ class StorageRepositoryKeys {
 
   /// The default log prefix for the secure storage repository implementation.
   /// Helps differentiate secure storage logs from general storage logs.
-  static const String defaultSecureStorageRepositoryImplLogPrefix =
-      'Secure storage repository';
+  static const String defaultSecureStorageRepositoryImplLogPrefix = 'Secure storage repository';
 
   /// The default key for accessing the secure storage box.
   /// Used to store sensitive data securely, typically with encryption.
-  static const String defaultSecureBoxKey =
-      '__STORAGE_REPOSITORY:DEFAULT_SECURE_BOX__';
+  static const String defaultSecureBoxKey = '__STORAGE_REPOSITORY:DEFAULT_SECURE_BOX__';
 }
