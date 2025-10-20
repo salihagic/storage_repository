@@ -11,9 +11,11 @@ import 'package:storage_repository/interfaces/storage_repository.dart';
 /// This implementation is designed to securely persist sensitive data,
 /// such as user authentication tokens. It leverages `FlutterSecureStorage`
 /// for securely storing encryption keys and `Hive` for encrypted storage.
-class SecureStorageRepositoryImpl extends StorageRepositoryImpl implements StorageRepository {
+class SecureStorageRepositoryImpl extends StorageRepositoryImpl
+    implements StorageRepository {
   /// Instance of `FlutterSecureStorage` used to securely store encryption keys.
-  final FlutterSecureStorage flutterSecureStorage = const FlutterSecureStorage();
+  final FlutterSecureStorage flutterSecureStorage =
+      const FlutterSecureStorage();
 
   /// Constructor for `SecureStorageRepositoryImpl`.
   ///
@@ -21,7 +23,8 @@ class SecureStorageRepositoryImpl extends StorageRepositoryImpl implements Stora
   /// - [logPrefix]: A prefix for log messages related to secure storage operations.
   SecureStorageRepositoryImpl({
     super.key = StorageRepositoryKeys.defaultSecureBoxKey,
-    super.logPrefix = StorageRepositoryKeys.defaultSecureStorageRepositoryImplLogPrefix,
+    super.logPrefix =
+        StorageRepositoryKeys.defaultSecureStorageRepositoryImplLogPrefix,
   });
 
   /// Initializes the secure storage repository.
@@ -41,7 +44,8 @@ class SecureStorageRepositoryImpl extends StorageRepositoryImpl implements Stora
 
     try {
       // Check if an encryption key already exists in secure storage.
-      containsEncryptionKey = await flutterSecureStorage.read(key: encryptionKeyStorageKey) != null;
+      containsEncryptionKey =
+          await flutterSecureStorage.read(key: encryptionKeyStorageKey) != null;
     } on PlatformException catch (_) {
       // If there's an error accessing secure storage, clear all stored data.
       await flutterSecureStorage.deleteAll();
@@ -50,14 +54,22 @@ class SecureStorageRepositoryImpl extends StorageRepositoryImpl implements Stora
     // If no encryption key exists, generate a new one and store it securely.
     if (!containsEncryptionKey) {
       final secureEncryptionKey = base64UrlEncode(Hive.generateSecureKey());
-      await flutterSecureStorage.write(key: encryptionKeyStorageKey, value: secureEncryptionKey);
+      await flutterSecureStorage.write(
+        key: encryptionKeyStorageKey,
+        value: secureEncryptionKey,
+      );
     }
 
     // Retrieve and decode the encryption key for Hive storage.
-    final encryptionKeyValue = base64Url.decode(await flutterSecureStorage.read(key: encryptionKeyStorageKey) ?? '');
+    final encryptionKeyValue = base64Url.decode(
+      await flutterSecureStorage.read(key: encryptionKeyStorageKey) ?? '',
+    );
 
     // Open a Hive box with AES encryption.
-    storage = await Hive.openBox(key, encryptionCipher: HiveAesCipher(encryptionKeyValue));
+    storage = await Hive.openBox(
+      key,
+      encryptionCipher: HiveAesCipher(encryptionKeyValue),
+    );
 
     return this;
   }
@@ -87,14 +99,22 @@ class SecureStorageRepositoryImpl extends StorageRepositoryImpl implements Stora
   Future<String> asString() async {
     final StringBuffer stringBuffer = StringBuffer();
 
-    stringBuffer.write('\n----------------------------------------------------------------------------------------');
+    stringBuffer.write(
+      '\n----------------------------------------------------------------------------------------',
+    );
     stringBuffer.write('\n$logPrefix repository data:');
-    stringBuffer.write('\n----------------------------------------------------------------------------------------');
+    stringBuffer.write(
+      '\n----------------------------------------------------------------------------------------',
+    );
 
     // Retrieve all stored key-value pairs and format them for output.
-    (await getAll()).forEach((key, value) => stringBuffer.write('\n\n$key: $value'));
+    (await getAll()).forEach(
+      (key, value) => stringBuffer.write('\n\n$key: $value'),
+    );
 
-    stringBuffer.write('\n----------------------------------------------------------------------------------------');
+    stringBuffer.write(
+      '\n----------------------------------------------------------------------------------------',
+    );
 
     return stringBuffer.toString();
   }
