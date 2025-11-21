@@ -1,3 +1,13 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
+// ignore: depend_on_referenced_packages
+import 'package:path_provider/path_provider.dart'
+    if (dart.library.html) 'src/stub/path_provider.dart';
+// ignore: depend_on_referenced_packages
+import 'package:path/path.dart'
+    if (dart.library.html) 'src/stub/path.dart'
+    as path_helper;
 import 'package:hive_flutter/hive_flutter.dart';
 
 /// Abstract class for the storage repository, serving as an interface
@@ -64,5 +74,16 @@ abstract class StorageRepository {
   /// Initializes Hive for Flutter.
   ///
   /// This method should be called early in the app lifecycle to set up Hive storage.
-  static Future<void> initFlutter() async => await Hive.initFlutter();
+  static Future<void> initFlutter([
+    bool skipWidgetsFlutterBindingInitialization = false,
+  ]) async {
+    if (skipWidgetsFlutterBindingInitialization) {
+      if (kIsWeb) return;
+
+      var appDir = await getApplicationDocumentsDirectory();
+      Hive.init(path_helper.join(appDir.path));
+    } else {
+      await Hive.initFlutter();
+    }
+  }
 }

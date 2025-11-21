@@ -1,3 +1,7 @@
+## 1.1.20
+
+* Added flag to optionally skip WidgetsFlutterBinding.ensureInitialized()
+
 ## 1.1.19
 
 * Formatting
