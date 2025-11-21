@@ -1,10 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
-// ignore: depend_on_referenced_packages
 import 'package:path_provider/path_provider.dart'
     if (dart.library.html) 'src/stub/path_provider.dart';
-// ignore: depend_on_referenced_packages
 import 'package:path/path.dart'
     if (dart.library.html) 'src/stub/path.dart'
     as path_helper;

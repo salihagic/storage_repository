@@ -225,7 +225,7 @@ packages:
     source: hosted
     version: "1.16.0"
   path:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: path
       sha256: "75cca69d1490965be98c73ceaea117e8a04dd21217b37b292c9ddbec0d955bc5"
@@ -233,7 +233,7 @@ packages:
     source: hosted
     version: "1.9.1"
   path_provider:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: path_provider
       sha256: db1cf6c3f906f50d52c18400be575f75ed620f8717f9b6d11263edd95080dfc6
