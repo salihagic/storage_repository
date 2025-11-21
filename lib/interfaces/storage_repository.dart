@@ -1,11 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
-import 'package:path_provider/path_provider.dart'
-    if (dart.library.html) 'src/stub/path_provider.dart';
-import 'package:path/path.dart'
-    if (dart.library.html) 'src/stub/path.dart'
-    as path_helper;
 import 'package:hive_flutter/hive_flutter.dart';
 
 /// Abstract class for the storage repository, serving as an interface
@@ -18,7 +12,7 @@ abstract class StorageRepository {
   ///
   /// This method should be called before using the storage to ensure it is properly set up.
   /// Returns an instance of [StorageRepository] once initialization is complete.
-  Future<StorageRepository> init();
+  Future<StorageRepository> init([bool migrateFromHive = true]);
 
   /// Saves a value under the specified key.
   ///
@@ -33,7 +27,7 @@ abstract class StorageRepository {
   /// - [key]: The key to look up.
   ///
   /// Returns the stored value if found, otherwise `null`.
-  dynamic get(dynamic key);
+  Future<dynamic> get(String key);
 
   /// Retrieves all stored key-value pairs.
   ///
@@ -45,19 +39,19 @@ abstract class StorageRepository {
   /// - [key]: The key to check.
   ///
   /// Returns `true` if the key exists, otherwise `false`.
-  Future<bool> contains(dynamic key);
+  Future<bool> contains(String key);
 
   /// Deletes a value stored under the specified key.
   ///
   /// - [key]: The key of the item to delete.
   ///
   /// Returns `true` if the deletion was successful, otherwise `false`.
-  Future<bool> delete(dynamic key);
+  Future<bool> delete(String key);
 
   /// Logs all stored data to the console.
   ///
   /// Useful for debugging and inspecting stored values.
-  Future log();
+  Future<void> log();
 
   /// Returns a string representation of all stored data.
   ///
@@ -67,21 +61,13 @@ abstract class StorageRepository {
   /// Clears all stored data in the repository.
   ///
   /// **Use with caution**, as this method will permanently delete all stored data.
-  Future clear();
+  Future<bool> clear();
 
   /// Initializes Hive for Flutter.
   ///
   /// This method should be called early in the app lifecycle to set up Hive storage.
-  static Future<void> initFlutter([
-    bool skipWidgetsFlutterBindingInitialization = false,
-  ]) async {
-    if (skipWidgetsFlutterBindingInitialization) {
-      if (kIsWeb) return;
-
-      var appDir = await getApplicationDocumentsDirectory();
-      Hive.init(path_helper.join(appDir.path));
-    } else {
-      await Hive.initFlutter();
-    }
-  }
+  ///
+  /// **This method is deprecated and will be removed once all app data is migrated from Hive.**
+  @Deprecated("Method will be removed once all apps data is migrated from Hive")
+  static Future<void> initFlutter() => Hive.initFlutter();
 }

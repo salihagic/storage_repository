@@ -1,3 +1,7 @@
+## 2.0.0
+
+* Migration from hive to shared_preferences and flutter_secture_storage
+
 ## 1.1.20
 
 * Added flag to optionally skip WidgetsFlutterBinding.ensureInitialized()

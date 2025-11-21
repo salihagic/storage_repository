@@ -1,43 +1,68 @@
 import 'dart:convert';
+import 'dart:developer' as developer;
+import 'package:flutter/foundation.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:storage_repository/constants/storage_repository_keys.dart';
+import 'package:storage_repository/interfaces/storage_repository.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hive/hive.dart';
 import 'package:storage_repository/constants/_all.dart';
-import 'package:storage_repository/implementations/storage_repository_impl.dart';
-import 'package:storage_repository/interfaces/storage_repository.dart';
 
 /// A secure implementation of [StorageRepository].
 ///
 /// This implementation is designed to securely persist sensitive data,
-/// such as user authentication tokens. It leverages `FlutterSecureStorage`
-/// for securely storing encryption keys and `Hive` for encrypted storage.
-class SecureStorageRepositoryImpl extends StorageRepositoryImpl
-    implements StorageRepository {
+/// such as user authentication tokens, using FlutterSecureStorage.
+class SecureStorageRepositoryImpl implements StorageRepository {
   /// Instance of `FlutterSecureStorage` used to securely store encryption keys.
-  final FlutterSecureStorage flutterSecureStorage =
-      const FlutterSecureStorage();
+  late FlutterSecureStorage storage;
+
+  /// Key used to identify the storage box.
+  late final String keyPrefix;
+
+  /// Prefix used in log messages to identify storage-related logs.
+  final String logPrefix;
 
   /// Constructor for `SecureStorageRepositoryImpl`.
   ///
-  /// - [key]: The key used to access the secure storage box.
-  /// - [logPrefix]: A prefix for log messages related to secure storage operations.
+  /// - [keyPrefix]: The prefix used to namespace storage keys for this repository instance.
+  /// - [logPrefix]: Prefix for log messages.
   SecureStorageRepositoryImpl({
-    super.key = StorageRepositoryKeys.defaultSecureBoxKey,
-    super.logPrefix =
-        StorageRepositoryKeys.defaultSecureStorageRepositoryImplLogPrefix,
+    this.keyPrefix = StorageRepositoryKeys.defaultKeyPrefix,
+    this.logPrefix = StorageRepositoryKeys.defaultStorageRepositoryLogPrefix,
   });
 
-  /// Initializes the secure storage repository.
+  String _generateKey(String key) => '$keyPrefix-$key';
+  String _sanitizeKey(String key) =>
+      keyPrefix.isNotEmpty ? key.substring(keyPrefix.length + 1) : key;
+
+  AndroidOptions _getAndroidOptions() =>
+      const AndroidOptions(encryptedSharedPreferences: true);
+
+  /// Initializes the storage repository.
   ///
-  /// This method should be called as early as possible in the application lifecycle.
-  /// It ensures that a secure encryption key is generated and stored securely.
+  /// This method should be called immediately after creating an instance of this class.
+  /// It performs one-time migration from Hive storage if [migrateFromHive] is true.
   ///
-  /// - If an encryption key does not exist, it generates a new one.
-  /// - If an error occurs while reading the encryption key, it clears secure storage.
-  ///
-  /// Returns an instance of [StorageRepository] once initialization is complete.
+  /// Returns an instance of [StorageRepository] once initialized.
   @override
-  Future<StorageRepository> init() async {
+  Future<StorageRepository> init([bool migrateFromHive = true]) async {
+    storage = FlutterSecureStorage(aOptions: _getAndroidOptions());
+
+    if (migrateFromHive) {
+      await _migrateFromHive();
+    }
+
+    return this;
+  }
+
+  Future<void> _migrateFromHive() async {
+    // final migrationAlreadyDone = await get(StorageRepositoryKeys.migrationCheckKey);
+
+    // if (migrationAlreadyDone == true) {
+    //   return;
+    // }
+
     const encryptionKeyStorageKey = StorageRepositoryKeys.encryptionKey;
 
     var containsEncryptionKey = false;
@@ -45,16 +70,16 @@ class SecureStorageRepositoryImpl extends StorageRepositoryImpl
     try {
       // Check if an encryption key already exists in secure storage.
       containsEncryptionKey =
-          await flutterSecureStorage.read(key: encryptionKeyStorageKey) != null;
+          await storage.read(key: encryptionKeyStorageKey) != null;
     } on PlatformException catch (_) {
       // If there's an error accessing secure storage, clear all stored data.
-      await flutterSecureStorage.deleteAll();
+      await storage.deleteAll();
     }
 
     // If no encryption key exists, generate a new one and store it securely.
     if (!containsEncryptionKey) {
       final secureEncryptionKey = base64UrlEncode(Hive.generateSecureKey());
-      await flutterSecureStorage.write(
+      await storage.write(
         key: encryptionKeyStorageKey,
         value: secureEncryptionKey,
       );
@@ -62,39 +87,159 @@ class SecureStorageRepositoryImpl extends StorageRepositoryImpl
 
     // Retrieve and decode the encryption key for Hive storage.
     final encryptionKeyValue = base64Url.decode(
-      await flutterSecureStorage.read(key: encryptionKeyStorageKey) ?? '',
+      await storage.read(key: encryptionKeyStorageKey) ?? '',
     );
 
     // Open a Hive box with AES encryption.
-    storage = await Hive.openBox(
-      key,
+    final hiveStorageBox = await Hive.openBox(
+      keyPrefix,
       encryptionCipher: HiveAesCipher(encryptionKeyValue),
     );
 
-    return this;
+    for (final key in hiveStorageBox.keys) {
+      final encodedValue = hiveStorageBox.get(key);
+      final hiveValue = (encodedValue == null || encodedValue is! String)
+          ? encodedValue
+          : json.decode(encodedValue);
+
+      debugPrint('FOUND STORAGE ITEM WITH KEY: $key AND VALUE: $hiveValue');
+
+      if (hiveValue != null) {
+        if (!await contains(key)) {
+          await set(key, hiveValue);
+
+          debugPrint(
+            'MIGRATED STORAGE ITEM WITH KEY: $key AND VALUE: $hiveValue',
+          );
+        }
+      }
+    }
+
+    await set(StorageRepositoryKeys.migrationCheckKey, true);
   }
 
-  /// Generates a strong 32-byte (256-bit) encryption key for secure storage.
+  /// Saves a key-value pair to the device's storage.
   ///
-  /// This method should be used to create secure keys when needed.
-  static List<int> generateSecureKey() => Hive.generateSecureKey();
+  /// - [key]: The key to store the data under.
+  /// - [value]: The data to be stored.
+  ///
+  /// Returns `true` if the operation was successful, otherwise `false`.
+  @override
+  Future<bool> set(String key, dynamic value) async {
+    try {
+      // Convert value to JSON format before storing.
+      final encodedValue = json.encode(value);
+      await storage.write(key: _generateKey(key), value: encodedValue);
+      return true;
+    } catch (e) {
+      debugPrint('$logPrefix exception: $e');
+      return false;
+    }
+  }
+
+  /// Retrieves the value stored under the given key.
+  ///
+  /// - [key]: The key for the stored data.
+  ///
+  /// Returns the decoded value if found, otherwise `null`.
+  @override
+  Future<dynamic> get(String key) async {
+    try {
+      // Retrieve the encoded value from storage.
+      final encodedValue = await storage.read(key: _generateKey(key));
+
+      // If value is not found return it as is.
+      if (encodedValue == null) {
+        return null;
+      }
+
+      // Decode the JSON-encoded value before returning.
+      final value = json.decode(encodedValue);
+      return value;
+    } catch (e) {
+      debugPrint(e.toString());
+      return null;
+    }
+  }
+
+  /// Retrieves all stored key-value pairs.
+  ///
+  /// Returns a `Map<String, dynamic>` containing all stored data.
+  @override
+  Future<Map<String, dynamic>> getAll() async {
+    final entries = (await storage.readAll()).entries
+        .where((x) => x.key.startsWith(keyPrefix))
+        .toList()
+        .map((x) {
+          return MapEntry<String, dynamic>(
+            _sanitizeKey(x.key),
+            json.decode(x.value),
+          );
+        });
+
+    return Map.fromEntries(entries);
+  }
+
+  /// Checks if a given key exists in the storage.
+  ///
+  /// - [key]: The key to check.
+  ///
+  /// Returns `true` if the key exists, otherwise `false`.
+  @override
+  Future<bool> contains(String key) async {
+    return await storage.containsKey(key: _generateKey(key));
+  }
+
+  /// Deletes an item from storage using the given key.
+  ///
+  /// - [key]: The key of the item to delete.
+  ///
+  /// Returns `true` if deletion was successful, otherwise `false`.
+  @override
+  Future<bool> delete(String key) async {
+    try {
+      await storage.delete(key: _generateKey(key));
+      return true;
+    } catch (e) {
+      debugPrint('$logPrefix exception: $e');
+      return false;
+    }
+  }
+
+  /// **Use with caution**
+  ///
+  /// Clears all data stored in the repository.
+  ///
+  /// Returns `true` if successful, otherwise `false`.
+  @override
+  Future<bool> clear() async {
+    try {
+      final allKeys = (await storage.readAll()).keys.where(
+        (key) => key.startsWith(keyPrefix),
+      );
+
+      for (final key in allKeys) {
+        await storage.delete(key: key);
+      }
+
+      return true;
+    } catch (e) {
+      debugPrint('$logPrefix exception: $e');
+      return false;
+    }
+  }
+
+  /// Logs all stored data to the console.
+  ///
+  /// Useful for debugging purposes.
+  @override
+  Future<void> log() async {
+    developer.log(await asString());
+  }
 
   /// Returns the stored data as a formatted string.
   ///
-  /// This method is primarily for debugging purposes, allowing developers
-  /// to inspect the stored data in a readable format.
-  ///
-  /// Example output:
-  /// ```
-  /// ----------------------------------------------------------------------------------------
-  /// Secure storage repository data:
-  /// ----------------------------------------------------------------------------------------
-  ///
-  /// key1: value1
-  /// key2: value2
-  ///
-  /// ----------------------------------------------------------------------------------------
-  /// ```
+  /// This method helps in debugging by providing a structured view of the stored key-value pairs.
   @override
   Future<String> asString() async {
     final StringBuffer stringBuffer = StringBuffer();
@@ -102,12 +247,12 @@ class SecureStorageRepositoryImpl extends StorageRepositoryImpl
     stringBuffer.write(
       '\n----------------------------------------------------------------------------------------',
     );
-    stringBuffer.write('\n$logPrefix repository data:');
+    stringBuffer.write('\n$logPrefix data:');
     stringBuffer.write(
       '\n----------------------------------------------------------------------------------------',
     );
 
-    // Retrieve all stored key-value pairs and format them for output.
+    // Retrieve all stored key-value pairs and format them.
     (await getAll()).forEach(
       (key, value) => stringBuffer.write('\n\n$key: $value'),
     );

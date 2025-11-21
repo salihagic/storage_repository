@@ -6,21 +6,24 @@ class StorageRepositoryKeys {
   /// This is crucial for securely storing sensitive data.
   static const String encryptionKey = '__STORAGE_REPOSITORY:ENCRYPTION_KEY__';
 
-  /// The default key for accessing the general storage box.
-  /// Used to store non-sensitive, application-wide data.
-  static const String defaultBoxKey = '__STORAGE_REPOSITORY:DEFAULT_BOX__';
+  /// The default prefix for storage keys.
+  /// Used to namespace storage keys and prevent conflicts with other data.
+  static const String defaultKeyPrefix =
+      'STORAGE_REPOSITORY:DEFAULT_KEY_PREFIX';
+
+  /// The key used to track migration completion status.
+  /// Ensures that data migration from Hive to SharedPreferences/FlutterSecureStorage
+  /// is performed only once.
+  static const String migrationCheckKey =
+      'STORAGE_REPOSITORY:MIGRATION_CHECK_KEY';
 
   /// The default log prefix for the storage repository.
   /// Useful for logging and debugging storage-related operations.
-  static const String defaultStorageRepositoryLogPrefix = 'Storage repository';
+  static const String defaultStorageRepositoryLogPrefix =
+      '__STORAGE_REPOSITORY:LOG__';
 
   /// The default log prefix for the secure storage repository implementation.
   /// Helps differentiate secure storage logs from general storage logs.
   static const String defaultSecureStorageRepositoryImplLogPrefix =
-      'Secure storage repository';
-
-  /// The default key for accessing the secure storage box.
-  /// Used to store sensitive data securely, typically with encryption.
-  static const String defaultSecureBoxKey =
-      '__STORAGE_REPOSITORY:DEFAULT_SECURE_BOX__';
+      '__SECURE_STORAGE_REPOSITORY:LOG__';
 }

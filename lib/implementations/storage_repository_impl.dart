@@ -2,57 +2,102 @@ import 'dart:convert';
 import 'dart:developer' as developer;
 import 'package:flutter/foundation.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:storage_repository/constants/storage_repository_keys.dart';
 import 'package:storage_repository/interfaces/storage_repository.dart';
 
 /// A basic implementation of [StorageRepository].
 ///
-/// This class provides a non-secure storage solution using Hive.
+/// This class provides a non-secure storage solution using SharedPreferences.
 /// It should NOT be used for storing sensitive data, such as user tokens.
 ///
-/// It allows storing, retrieving, and managing data efficiently in a local database.
+/// It allows storing, retrieving, and managing data efficiently in local storage.
 class StorageRepositoryImpl implements StorageRepository {
-  /// Hive storage box instance.
-  late Box storage;
+  /// SharedPreferences instance.
+  late SharedPreferences storage;
 
   /// Key used to identify the storage box.
-  late final String key;
+  late final String keyPrefix;
 
   /// Prefix used in log messages to identify storage-related logs.
   final String logPrefix;
 
   /// Constructor for `StorageRepositoryImpl`.
   ///
-  /// - [key]: The storage box key, used for retrieving the correct Hive storage.
+  /// - [keyPrefix]: The prefix used to namespace storage keys for this repository instance.
   /// - [logPrefix]: Prefix for log messages.
   StorageRepositoryImpl({
-    this.key = StorageRepositoryKeys.defaultBoxKey,
+    this.keyPrefix = StorageRepositoryKeys.defaultKeyPrefix,
     this.logPrefix = StorageRepositoryKeys.defaultStorageRepositoryLogPrefix,
   });
+
+  String _generateKey(String key) => '$keyPrefix-$key';
+  String _sanitizeKey(String key) =>
+      keyPrefix.isNotEmpty ? key.substring(keyPrefix.length + 1) : key;
 
   /// Initializes the storage repository.
   ///
   /// This method should be called immediately after creating an instance of this class.
-  /// It attempts to open the Hive box, and in case of failure, it resets the storage and retries.
+  /// It performs one-time migration from Hive storage if [migrateFromHive] is true.
   ///
   /// Returns an instance of [StorageRepository] once initialized.
   @override
-  Future<StorageRepository> init() async {
+  Future<StorageRepository> init([bool migrateFromHive = true]) async {
+    storage = await SharedPreferences.getInstance();
+
+    if (migrateFromHive) {
+      await _migrateFromHive();
+    }
+
+    return this;
+  }
+
+  Future<void> _migrateFromHive() async {
+    // final migrationAlreadyDone = await get(StorageRepositoryKeys.migrationCheckKey);
+
+    // if (migrationAlreadyDone == true) {
+    //   return;
+    // }
+
+    Box? hiveStorageBox;
+
     try {
       // Attempt to open the Hive storage box.
-      storage = await Hive.openBox(key);
+      hiveStorageBox = await Hive.openBox(keyPrefix);
     } catch (e) {
       debugPrint(e.toString());
 
       // If an error occurs, delete the storage box and retry opening it.
-      Hive.deleteBoxFromDisk(key);
+      Hive.deleteBoxFromDisk(keyPrefix);
       try {
-        storage = await Hive.openBox(key);
+        hiveStorageBox = await Hive.openBox(keyPrefix);
       } catch (e) {
         debugPrint(e.toString());
       }
     }
-    return this;
+
+    if (hiveStorageBox != null) {
+      for (final key in hiveStorageBox.keys) {
+        final encodedValue = hiveStorageBox.get(key);
+        final hiveValue = (encodedValue == null || encodedValue is! String)
+            ? encodedValue
+            : json.decode(encodedValue);
+
+        debugPrint('FOUND STORAGE ITEM WITH KEY: $key AND VALUE: $hiveValue');
+
+        if (hiveValue != null) {
+          if (!await contains(key)) {
+            await set(key, hiveValue);
+
+            debugPrint(
+              'MIGRATED STORAGE ITEM WITH KEY: $key AND VALUE: $hiveValue',
+            );
+          }
+        }
+      }
+    }
+
+    await set(StorageRepositoryKeys.migrationCheckKey, true);
   }
 
   /// Saves a key-value pair to the device's storage.
@@ -62,11 +107,11 @@ class StorageRepositoryImpl implements StorageRepository {
   ///
   /// Returns `true` if the operation was successful, otherwise `false`.
   @override
-  Future<bool> set(dynamic key, dynamic value) async {
+  Future<bool> set(String key, dynamic value) async {
     try {
       // Convert value to JSON format before storing.
       final encodedValue = json.encode(value);
-      await storage.put(key, encodedValue);
+      await storage.setString(_generateKey(key), encodedValue);
       return true;
     } catch (e) {
       debugPrint('$logPrefix exception: $e');
@@ -80,14 +125,10 @@ class StorageRepositoryImpl implements StorageRepository {
   ///
   /// Returns the decoded value if found, otherwise `null`.
   @override
-  dynamic get(dynamic key) {
+  Future<dynamic> get(String key) async {
     try {
-      if (key == null) {
-        return null;
-      }
-
       // Retrieve the encoded value from storage.
-      final encodedValue = storage.get(key);
+      final encodedValue = storage.get(_generateKey(key));
 
       // If value is not found or is not a string, return it as is.
       if (encodedValue == null || encodedValue is! String) {
@@ -108,16 +149,20 @@ class StorageRepositoryImpl implements StorageRepository {
   /// Returns a `Map<String, dynamic>` containing all stored data.
   @override
   Future<Map<String, dynamic>> getAll() async {
-    final entries = storage.keys.map((key) {
-      final encodedValue = storage.get(key);
+    final entries = storage
+        .getKeys()
+        .where((key) => key.startsWith(keyPrefix))
+        .toList()
+        .map((key) {
+          final encodedValue = storage.get(key);
 
-      return MapEntry<String, dynamic>(
-        key,
-        (encodedValue == null || encodedValue is! String)
-            ? encodedValue
-            : json.decode(encodedValue),
-      );
-    });
+          return MapEntry<String, dynamic>(
+            _sanitizeKey(key),
+            (encodedValue == null || encodedValue is! String)
+                ? encodedValue
+                : json.decode(encodedValue),
+          );
+        });
 
     return Map.fromEntries(entries);
   }
@@ -128,8 +173,8 @@ class StorageRepositoryImpl implements StorageRepository {
   ///
   /// Returns `true` if the key exists, otherwise `false`.
   @override
-  Future<bool> contains(dynamic key) async {
-    return key != null && storage.containsKey(key);
+  Future<bool> contains(String key) async {
+    return storage.containsKey(_generateKey(key));
   }
 
   /// Deletes an item from storage using the given key.
@@ -138,9 +183,9 @@ class StorageRepositoryImpl implements StorageRepository {
   ///
   /// Returns `true` if deletion was successful, otherwise `false`.
   @override
-  Future<bool> delete(dynamic key) async {
+  Future<bool> delete(String key) async {
     try {
-      await storage.delete(key);
+      await storage.remove(_generateKey(key));
       return true;
     } catch (e) {
       debugPrint('$logPrefix exception: $e');
@@ -156,7 +201,14 @@ class StorageRepositoryImpl implements StorageRepository {
   @override
   Future<bool> clear() async {
     try {
-      await storage.clear();
+      final allKeys = storage.getKeys().where(
+        (key) => key.startsWith(keyPrefix),
+      );
+
+      for (final key in allKeys) {
+        await storage.remove(key);
+      }
+
       return true;
     } catch (e) {
       debugPrint('$logPrefix exception: $e');
@@ -168,7 +220,7 @@ class StorageRepositoryImpl implements StorageRepository {
   ///
   /// Useful for debugging purposes.
   @override
-  Future log() async {
+  Future<void> log() async {
     developer.log(await asString());
   }
 
