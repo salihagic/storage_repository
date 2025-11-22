@@ -18,22 +18,19 @@ class StorageRepositoryImpl implements StorageRepository {
 
   /// Key used to identify the storage box.
   late final String keyPrefix;
-
-  /// Prefix used in log messages to identify storage-related logs.
-  final String logPrefix;
+  late final String migrationBoxKey;
 
   /// Constructor for `StorageRepositoryImpl`.
   ///
   /// - [keyPrefix]: The prefix used to namespace storage keys for this repository instance.
-  /// - [logPrefix]: Prefix for log messages.
   StorageRepositoryImpl({
-    this.keyPrefix = StorageRepositoryKeys.defaultKeyPrefix,
-    this.logPrefix = StorageRepositoryKeys.defaultStorageRepositoryLogPrefix,
+    this.keyPrefix = StorageRepositoryKeys.defaultStorageKeyPrefix,
+    this.migrationBoxKey = StorageRepositoryKeys.migrationDefaultBoxKey,
   });
 
-  String _generateKey(String key) => '$keyPrefix-$key';
+  String _generateKey(String key) => '$keyPrefix:$key';
   String _sanitizeKey(String key) =>
-      keyPrefix.isNotEmpty ? key.substring(keyPrefix.length + 1) : key;
+      keyPrefix.isNotEmpty ? key.replaceAll('$keyPrefix:', '') : key;
 
   /// Initializes the storage repository.
   ///
@@ -63,14 +60,14 @@ class StorageRepositoryImpl implements StorageRepository {
 
     try {
       // Attempt to open the Hive storage box.
-      hiveStorageBox = await Hive.openBox(keyPrefix);
+      hiveStorageBox = await Hive.openBox(migrationBoxKey);
     } catch (e) {
       debugPrint(e.toString());
 
       // If an error occurs, delete the storage box and retry opening it.
-      Hive.deleteBoxFromDisk(keyPrefix);
+      Hive.deleteBoxFromDisk(migrationBoxKey);
       try {
-        hiveStorageBox = await Hive.openBox(keyPrefix);
+        hiveStorageBox = await Hive.openBox(migrationBoxKey);
       } catch (e) {
         debugPrint(e.toString());
       }
@@ -79,25 +76,32 @@ class StorageRepositoryImpl implements StorageRepository {
     if (hiveStorageBox != null) {
       for (final key in hiveStorageBox.keys) {
         final encodedValue = hiveStorageBox.get(key);
-        final hiveValue = (encodedValue == null || encodedValue is! String)
-            ? encodedValue
-            : json.decode(encodedValue);
-
-        debugPrint('FOUND STORAGE ITEM WITH KEY: $key AND VALUE: $hiveValue');
+        // Safe decoding
+        dynamic hiveValue;
+        if (encodedValue == null) {
+          hiveValue = null;
+        } else if (encodedValue is String) {
+          try {
+            hiveValue = json.decode(encodedValue);
+          } catch (e) {
+            // If JSON decode fails, use the string as-is
+            debugPrint('Failed to decode value for key $key, using raw value');
+            hiveValue = encodedValue;
+          }
+        } else {
+          hiveValue = encodedValue;
+        }
 
         if (hiveValue != null) {
           if (!await contains(key)) {
             await set(key, hiveValue);
-
-            debugPrint(
-              'MIGRATED STORAGE ITEM WITH KEY: $key AND VALUE: $hiveValue',
-            );
           }
         }
       }
-    }
 
-    await set(StorageRepositoryKeys.migrationCheckKey, true);
+      await set(StorageRepositoryKeys.migrationCheckKey, true);
+      // await hiveStorageBox.deleteFromDisk();
+    }
   }
 
   /// Saves a key-value pair to the device's storage.
@@ -114,7 +118,7 @@ class StorageRepositoryImpl implements StorageRepository {
       await storage.setString(_generateKey(key), encodedValue);
       return true;
     } catch (e) {
-      debugPrint('$logPrefix exception: $e');
+      debugPrint('$keyPrefix exception: $e');
       return false;
     }
   }
@@ -188,7 +192,7 @@ class StorageRepositoryImpl implements StorageRepository {
       await storage.remove(_generateKey(key));
       return true;
     } catch (e) {
-      debugPrint('$logPrefix exception: $e');
+      debugPrint('$keyPrefix exception: $e');
       return false;
     }
   }
@@ -211,7 +215,7 @@ class StorageRepositoryImpl implements StorageRepository {
 
       return true;
     } catch (e) {
-      debugPrint('$logPrefix exception: $e');
+      debugPrint('$keyPrefix exception: $e');
       return false;
     }
   }
@@ -234,7 +238,7 @@ class StorageRepositoryImpl implements StorageRepository {
     stringBuffer.write(
       '\n----------------------------------------------------------------------------------------',
     );
-    stringBuffer.write('\n$logPrefix data:');
+    stringBuffer.write('\n$keyPrefix');
     stringBuffer.write(
       '\n----------------------------------------------------------------------------------------',
     );

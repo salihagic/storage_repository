@@ -67,7 +67,7 @@ abstract class StorageRepository {
   ///
   /// This method should be called early in the app lifecycle to set up Hive storage.
   ///
-  /// **This method is deprecated and will be removed once all app data is migrated from Hive.**
-  @Deprecated("Method will be removed once all apps data is migrated from Hive")
+  /// **This is deprecated and will be removed once all app data is migrated from Hive.**
+  @Deprecated('Will be removed once all apps data is migrated from Hive')
   static Future<void> initFlutter() => Hive.initFlutter();
 }

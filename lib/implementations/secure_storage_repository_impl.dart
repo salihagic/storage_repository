@@ -19,23 +19,19 @@ class SecureStorageRepositoryImpl implements StorageRepository {
 
   /// Key used to identify the storage box.
   late final String keyPrefix;
-
-  /// Prefix used in log messages to identify storage-related logs.
-  final String logPrefix;
+  late final String migrationBoxKey;
 
   /// Constructor for `SecureStorageRepositoryImpl`.
   ///
   /// - [keyPrefix]: The prefix used to namespace storage keys for this repository instance.
-  /// - [logPrefix]: Prefix for log messages.
   SecureStorageRepositoryImpl({
-    this.keyPrefix = StorageRepositoryKeys.defaultKeyPrefix,
-    this.logPrefix = StorageRepositoryKeys.defaultStorageRepositoryLogPrefix,
+    this.keyPrefix = StorageRepositoryKeys.defaultSecureStorageKeyPrefix,
+    this.migrationBoxKey = StorageRepositoryKeys.migrationDefaultSecureBoxKey,
   });
 
-  String _generateKey(String key) => '$keyPrefix-$key';
+  String _generateKey(String key) => '$keyPrefix:$key';
   String _sanitizeKey(String key) =>
-      keyPrefix.isNotEmpty ? key.substring(keyPrefix.length + 1) : key;
-
+      keyPrefix.isNotEmpty ? key.replaceAll('$keyPrefix:', '') : key;
   AndroidOptions _getAndroidOptions() =>
       const AndroidOptions(encryptedSharedPreferences: true);
 
@@ -63,59 +59,80 @@ class SecureStorageRepositoryImpl implements StorageRepository {
     //   return;
     // }
 
-    const encryptionKeyStorageKey = StorageRepositoryKeys.encryptionKey;
-
-    var containsEncryptionKey = false;
+    late Box hiveStorageBox;
 
     try {
-      // Check if an encryption key already exists in secure storage.
-      containsEncryptionKey =
-          await storage.read(key: encryptionKeyStorageKey) != null;
-    } on PlatformException catch (_) {
-      // If there's an error accessing secure storage, clear all stored data.
-      await storage.deleteAll();
-    }
+      const encryptionKeyStorageKey = StorageRepositoryKeys.encryptionKey;
 
-    // If no encryption key exists, generate a new one and store it securely.
-    if (!containsEncryptionKey) {
-      final secureEncryptionKey = base64UrlEncode(Hive.generateSecureKey());
-      await storage.write(
-        key: encryptionKeyStorageKey,
-        value: secureEncryptionKey,
+      var containsEncryptionKey = false;
+
+      try {
+        // Check if an encryption key already exists in secure storage.
+        containsEncryptionKey =
+            await storage.read(key: encryptionKeyStorageKey) != null;
+      } on PlatformException catch (_) {
+        // If there's an error accessing secure storage, clear all stored data.
+        await storage.deleteAll();
+      }
+
+      // If no encryption key exists, generate a new one and store it securely.
+      if (!containsEncryptionKey) {
+        final secureEncryptionKey = base64UrlEncode(Hive.generateSecureKey());
+        await storage.write(
+          key: encryptionKeyStorageKey,
+          value: secureEncryptionKey,
+        );
+      }
+
+      // Retrieve and decode the encryption key for Hive storage.
+      final encryptionKeyValue = base64Url.decode(
+        await storage.read(key: encryptionKeyStorageKey) ?? '',
+      );
+
+      // Open a Hive box with AES encryption.
+      hiveStorageBox = await Hive.openBox(
+        migrationBoxKey,
+        encryptionCipher: HiveAesCipher(encryptionKeyValue),
+      );
+    } catch (e) {
+      debugPrint(
+        'HIVE THREW IN SECURE STORAGE REPOSITORY keyPrefix: $keyPrefix | migrationBoxKey: $migrationBoxKey | e: $e',
       );
     }
 
-    // Retrieve and decode the encryption key for Hive storage.
-    final encryptionKeyValue = base64Url.decode(
-      await storage.read(key: encryptionKeyStorageKey) ?? '',
-    );
+    try {
+      for (final key in hiveStorageBox.keys) {
+        final encodedValue = hiveStorageBox.get(key);
+        // Safe decoding
+        dynamic hiveValue;
+        if (encodedValue == null) {
+          hiveValue = null;
+        } else if (encodedValue is String) {
+          try {
+            hiveValue = json.decode(encodedValue);
+          } catch (e) {
+            // If JSON decode fails, use the string as-is
+            debugPrint('Failed to decode value for key $key, using raw value');
+            hiveValue = encodedValue;
+          }
+        } else {
+          hiveValue = encodedValue;
+        }
 
-    // Open a Hive box with AES encryption.
-    final hiveStorageBox = await Hive.openBox(
-      keyPrefix,
-      encryptionCipher: HiveAesCipher(encryptionKeyValue),
-    );
-
-    for (final key in hiveStorageBox.keys) {
-      final encodedValue = hiveStorageBox.get(key);
-      final hiveValue = (encodedValue == null || encodedValue is! String)
-          ? encodedValue
-          : json.decode(encodedValue);
-
-      debugPrint('FOUND STORAGE ITEM WITH KEY: $key AND VALUE: $hiveValue');
-
-      if (hiveValue != null) {
-        if (!await contains(key)) {
-          await set(key, hiveValue);
-
-          debugPrint(
-            'MIGRATED STORAGE ITEM WITH KEY: $key AND VALUE: $hiveValue',
-          );
+        if (hiveValue != null) {
+          if (!await contains(key)) {
+            await set(key, hiveValue);
+          }
         }
       }
-    }
 
-    await set(StorageRepositoryKeys.migrationCheckKey, true);
+      await set(StorageRepositoryKeys.migrationCheckKey, true);
+      // await hiveStorageBox.deleteFromDisk();
+    } catch (e) {
+      debugPrint(
+        'SECURE STORAGE REPOSITORY keyPrefix: $keyPrefix migrationBoxKey: $migrationBoxKey threw an EXCEPTION: ${e.toString()}',
+      );
+    }
   }
 
   /// Saves a key-value pair to the device's storage.
@@ -132,7 +149,7 @@ class SecureStorageRepositoryImpl implements StorageRepository {
       await storage.write(key: _generateKey(key), value: encodedValue);
       return true;
     } catch (e) {
-      debugPrint('$logPrefix exception: $e');
+      debugPrint('$keyPrefix exception: $e');
       return false;
     }
   }
@@ -153,8 +170,8 @@ class SecureStorageRepositoryImpl implements StorageRepository {
         return null;
       }
 
-      // Decode the JSON-encoded value before returning.
       final value = json.decode(encodedValue);
+
       return value;
     } catch (e) {
       debugPrint(e.toString());
@@ -201,7 +218,7 @@ class SecureStorageRepositoryImpl implements StorageRepository {
       await storage.delete(key: _generateKey(key));
       return true;
     } catch (e) {
-      debugPrint('$logPrefix exception: $e');
+      debugPrint('$keyPrefix exception: $e');
       return false;
     }
   }
@@ -224,7 +241,7 @@ class SecureStorageRepositoryImpl implements StorageRepository {
 
       return true;
     } catch (e) {
-      debugPrint('$logPrefix exception: $e');
+      debugPrint('$keyPrefix exception: $e');
       return false;
     }
   }
@@ -247,7 +264,7 @@ class SecureStorageRepositoryImpl implements StorageRepository {
     stringBuffer.write(
       '\n----------------------------------------------------------------------------------------',
     );
-    stringBuffer.write('\n$logPrefix data:');
+    stringBuffer.write('\n$keyPrefix:');
     stringBuffer.write(
       '\n----------------------------------------------------------------------------------------',
     );

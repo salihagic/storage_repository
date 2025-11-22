@@ -1,3 +1,7 @@
+## 2.0.1
+
+* Migration from hive updated
+
 ## 2.0.0
 
 * Migration from hive to shared_preferences and flutter_secture_storage
