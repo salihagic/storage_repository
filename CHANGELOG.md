@@ -1,6 +1,6 @@
 ## 2.0.2
 
-* Dependencies upgrade and docs updated
+* Dependencies upgraded and docs updated
 
 ## 2.0.1
 
