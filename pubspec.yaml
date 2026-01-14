@@ -1,20 +1,20 @@
 name: storage_repository
 description: Abstraction for reading and persisting data to platform specific storage.
-version: 2.0.1
+version: 2.0.2
 repository: https://github.com/salihagic/storage_repository
 
 environment:
-  sdk: ^3.8.1
+  sdk: ^3.10.4
 
 dependencies:
   flutter:
     sdk: flutter
   hive: ^2.2.3
   hive_flutter: ^1.1.0
-  flutter_secure_storage: ^9.2.4
-  shared_preferences: ^2.5.3
+  flutter_secure_storage: ^10.0.0
+  shared_preferences: ^2.5.4
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^5.0.0
+  flutter_lints: ^6.0.0

@@ -1,3 +1,7 @@
+## 2.0.2
+
+* Dependencies upgrade and docs updated
+
 ## 2.0.1
 
 * Migration from hive updated

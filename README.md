@@ -1,43 +1,224 @@
-# Storage repository
-Abstraction for persisting and reading data to platform specific storage.
-You can also find this package on pub as [storage_repository](https://pub.dev/packages/storage_repository) 
+# Storage Repository
 
-## Usage
+A Flutter package that provides a clean abstraction layer for persistent key-value storage with both secure and non-secure implementations.
+
+[![pub package](https://img.shields.io/pub/v/storage_repository.svg)](https://pub.dev/packages/storage_repository)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+
+## Features
+
+- **Simple API** - Easy-to-use interface for storing and retrieving data
+- **Secure Storage** - Platform-level encryption for sensitive data (iOS Keychain, Android Keystore)
+- **Non-Secure Storage** - Fast storage using SharedPreferences for general app data
+- **Key Namespacing** - Isolate data with custom key prefixes
+- **JSON Serialization** - Automatically handles complex data types
+- **Cross-Platform** - Works on iOS, Android, Web, Windows, macOS, and Linux
+
+## Installation
+
+Add to your `pubspec.yaml`:
+
+```yaml
+dependencies:
+  storage_repository: ^2.0.2
 ```
-Future main() async {
-    WidgetsFlutterBinding.ensureInitialized();
-    //This must be called once per application lifetime
-    await StorageRepository.initFlutter();
 
-    //Instantiate a basic storage repository
-    IStorageRepository storageRepository = StorageRepository();
-    //or use a secure version of storage repository
-    //final storageRepository = SecureStorageRepositoryImpl();
-    //init must be called, preferably right after the instantiation
-    await storageRepository.init();
+Then run:
 
-    await storageRepository.set('some_string_key', 'Some string');
-    await storageRepository.set('some_int_key', 0);
-    //dynamic keys are also possible
-    await storageRepository.set(1, 1);
+```bash
+flutter pub get
+```
 
-    //result: Some string (dynamic)
-    print(await storageRepository.get('some_string_key'));
+## Quick Start
 
-    //result: 0 (dynamic)
-    print(await storageRepository.get('some_int_key'));
+### Basic Setup
 
-    //result: 1 (dynamic)
-    print(await storageRepository.get(1));
+```dart
+import 'package:storage_repository/storage_repository.dart';
 
-    //result: 1 (int?)
-    print(await storageRepository.get(1));
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
 
-    await storageRepository.delete('some_string_key');
+  // Create and initialize storage
+  final storage = StorageRepositoryImpl();
+  await storage.init();
 
-    await storageRepository.log();
+  // Store data
+  await storage.set('username', 'john_doe');
+  await storage.set('settings', {'theme': 'dark', 'notifications': true});
 
-    await storageRepository.clear();
+  // Retrieve data
+  final username = await storage.get('username'); // 'john_doe'
+  final settings = await storage.get('settings'); // {'theme': 'dark', ...}
+
+  runApp(MyApp(storage: storage));
+}
+```
+
+### Secure Storage (for sensitive data)
+
+```dart
+// Use SecureStorageRepositoryImpl for tokens, passwords, API keys, etc.
+final secureStorage = SecureStorageRepositoryImpl();
+await secureStorage.init();
+
+// Store sensitive data with platform-level encryption
+await secureStorage.set('auth_token', 'eyJhbGciOiJIUzI1NiIs...');
+await secureStorage.set('api_key', 'sk-1234567890');
+
+// Retrieve encrypted data
+final token = await secureStorage.get('auth_token');
+```
+
+## API Reference
+
+### StorageRepository Interface
+
+Both `StorageRepositoryImpl` and `SecureStorageRepositoryImpl` implement the same interface:
+
+| Method | Description | Returns |
+|--------|-------------|---------|
+| `init([migrateFromHive])` | Initialize the storage | `Future<StorageRepository>` |
+| `set(key, value)` | Store a value | `Future<bool>` |
+| `get(key)` | Retrieve a value | `Future<dynamic>` |
+| `getAll()` | Get all stored key-value pairs | `Future<Map<String, dynamic>>` |
+| `contains(key)` | Check if a key exists | `Future<bool>` |
+| `delete(key)` | Remove a key-value pair | `Future<bool>` |
+| `clear()` | Remove all data | `Future<bool>` |
+| `log()` | Print all data to console | `Future<void>` |
+| `asString()` | Get string representation of all data | `Future<String>` |
+
+## Usage Examples
+
+### Storing Different Data Types
+
+```dart
+final storage = StorageRepositoryImpl();
+await storage.init();
+
+// Strings
+await storage.set('name', 'Alice');
+
+// Numbers
+await storage.set('age', 25);
+await storage.set('score', 99.5);
+
+// Booleans
+await storage.set('is_premium', true);
+
+// Lists
+await storage.set('tags', ['flutter', 'dart', 'mobile']);
+
+// Maps/Objects
+await storage.set('user', {
+  'id': 1,
+  'name': 'Alice',
+  'email': 'alice@example.com',
+});
+```
+
+### Custom Key Prefixes
+
+Use key prefixes to namespace your storage and avoid key collisions:
+
+```dart
+// User-related data
+final userStorage = StorageRepositoryImpl(keyPrefix: 'USER');
+await userStorage.init();
+await userStorage.set('profile', {...});
+
+// App settings
+final settingsStorage = StorageRepositoryImpl(keyPrefix: 'SETTINGS');
+await settingsStorage.init();
+await settingsStorage.set('theme', 'dark');
+```
+
+### Dependency Injection Pattern
+
+```dart
+class AuthService {
+  final StorageRepository _secureStorage;
+
+  AuthService(this._secureStorage);
+
+  Future<void> saveToken(String token) async {
+    await _secureStorage.set('auth_token', token);
+  }
+
+  Future<String?> getToken() async {
+    return await _secureStorage.get('auth_token');
+  }
+
+  Future<void> logout() async {
+    await _secureStorage.delete('auth_token');
+  }
 }
 
+// Usage
+final secureStorage = SecureStorageRepositoryImpl();
+await secureStorage.init();
+final authService = AuthService(secureStorage);
 ```
+
+### Checking and Managing Data
+
+```dart
+// Check if a key exists before accessing
+if (await storage.contains('user_preferences')) {
+  final prefs = await storage.get('user_preferences');
+  // Use preferences...
+}
+
+// Get all stored data
+final allData = await storage.getAll();
+print('Stored keys: ${allData.keys}');
+
+// Debug: log all data to console
+await storage.log();
+
+// Clear all data (use with caution!)
+await storage.clear();
+```
+
+## When to Use Each Implementation
+
+| Use Case | Implementation |
+|----------|---------------|
+| User preferences | `StorageRepositoryImpl` |
+| UI state / settings | `StorageRepositoryImpl` |
+| Cached data | `StorageRepositoryImpl` |
+| Authentication tokens | `SecureStorageRepositoryImpl` |
+| API keys | `SecureStorageRepositoryImpl` |
+| Passwords / credentials | `SecureStorageRepositoryImpl` |
+| Personal identifiable information | `SecureStorageRepositoryImpl` |
+
+## Platform Support
+
+| Platform | Non-Secure | Secure |
+|----------|------------|--------|
+| Android | SharedPreferences | EncryptedSharedPreferences + Keystore |
+| iOS | NSUserDefaults | Keychain |
+| Web | LocalStorage | LocalStorage (limited security) |
+| Windows | File-based | File-based with encryption |
+| macOS | NSUserDefaults | Keychain |
+| Linux | File-based | File-based with encryption |
+
+## Migration from v1.x
+
+Version 2.x migrates from Hive to platform-native storage. The migration is automatic:
+
+```dart
+final storage = StorageRepositoryImpl();
+await storage.init(); // Automatically migrates data from Hive
+
+// To skip migration (if you're sure there's no Hive data):
+await storage.init(false);
+```
+
+## License
+
+MIT License - see [LICENSE](LICENSE) for details.
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit issues and pull requests on [GitHub](https://github.com/salihagic/storage_repository).
