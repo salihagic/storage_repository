@@ -1,7 +1,5 @@
 import 'dart:async';
 
-import 'package:hive_flutter/hive_flutter.dart';
-
 /// Abstract class for the storage repository, serving as an interface
 /// for dependency injection (DI) patterns.
 ///
@@ -12,7 +10,7 @@ abstract class StorageRepository {
   ///
   /// This method should be called before using the storage to ensure it is properly set up.
   /// Returns an instance of [StorageRepository] once initialization is complete.
-  Future<StorageRepository> init([bool migrateFromHive = true]);
+  Future<StorageRepository> init();
 
   /// Saves a value under the specified key.
   ///
@@ -62,12 +60,4 @@ abstract class StorageRepository {
   ///
   /// **Use with caution**, as this method will permanently delete all stored data.
   Future<bool> clear();
-
-  /// Initializes Hive for Flutter.
-  ///
-  /// This method should be called early in the app lifecycle to set up Hive storage.
-  ///
-  /// **This is deprecated and will be removed once all app data is migrated from Hive.**
-  @Deprecated('Will be removed once all apps data is migrated from Hive')
-  static Future<void> initFlutter() => Hive.initFlutter();
 }

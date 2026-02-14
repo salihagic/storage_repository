@@ -1,13 +1,9 @@
 import 'dart:convert';
 import 'dart:developer' as developer;
 import 'package:flutter/foundation.dart';
-import 'package:hive_flutter/hive_flutter.dart';
 import 'package:storage_repository/constants/storage_repository_keys.dart';
 import 'package:storage_repository/interfaces/storage_repository.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:hive/hive.dart';
-import 'package:storage_repository/constants/_all.dart';
 
 /// A secure implementation of [StorageRepository].
 ///
@@ -19,120 +15,28 @@ class SecureStorageRepositoryImpl implements StorageRepository {
 
   /// Key used to identify the storage box.
   late final String keyPrefix;
-  late final String migrationBoxKey;
 
   /// Constructor for `SecureStorageRepositoryImpl`.
   ///
   /// - [keyPrefix]: The prefix used to namespace storage keys for this repository instance.
   SecureStorageRepositoryImpl({
     this.keyPrefix = StorageRepositoryKeys.defaultSecureStorageKeyPrefix,
-    this.migrationBoxKey = StorageRepositoryKeys.migrationDefaultSecureBoxKey,
   });
 
   String _generateKey(String key) => '$keyPrefix:$key';
   String _sanitizeKey(String key) =>
       keyPrefix.isNotEmpty ? key.replaceAll('$keyPrefix:', '') : key;
-  AndroidOptions _getAndroidOptions() =>
-      const AndroidOptions(encryptedSharedPreferences: true);
+  AndroidOptions _getAndroidOptions() => const AndroidOptions();
 
   /// Initializes the storage repository.
   ///
   /// This method should be called immediately after creating an instance of this class.
-  /// It performs one-time migration from Hive storage if [migrateFromHive] is true.
   ///
   /// Returns an instance of [StorageRepository] once initialized.
   @override
-  Future<StorageRepository> init([bool migrateFromHive = true]) async {
+  Future<StorageRepository> init() async {
     storage = FlutterSecureStorage(aOptions: _getAndroidOptions());
-
-    if (migrateFromHive) {
-      await _migrateFromHive();
-    }
-
     return this;
-  }
-
-  Future<void> _migrateFromHive() async {
-    // final migrationAlreadyDone = await get(StorageRepositoryKeys.migrationCheckKey);
-
-    // if (migrationAlreadyDone == true) {
-    //   return;
-    // }
-
-    late Box hiveStorageBox;
-
-    try {
-      const encryptionKeyStorageKey = StorageRepositoryKeys.encryptionKey;
-
-      var containsEncryptionKey = false;
-
-      try {
-        // Check if an encryption key already exists in secure storage.
-        containsEncryptionKey =
-            await storage.read(key: encryptionKeyStorageKey) != null;
-      } on PlatformException catch (_) {
-        // If there's an error accessing secure storage, clear all stored data.
-        await storage.deleteAll();
-      }
-
-      // If no encryption key exists, generate a new one and store it securely.
-      if (!containsEncryptionKey) {
-        final secureEncryptionKey = base64UrlEncode(Hive.generateSecureKey());
-        await storage.write(
-          key: encryptionKeyStorageKey,
-          value: secureEncryptionKey,
-        );
-      }
-
-      // Retrieve and decode the encryption key for Hive storage.
-      final encryptionKeyValue = base64Url.decode(
-        await storage.read(key: encryptionKeyStorageKey) ?? '',
-      );
-
-      // Open a Hive box with AES encryption.
-      hiveStorageBox = await Hive.openBox(
-        migrationBoxKey,
-        encryptionCipher: HiveAesCipher(encryptionKeyValue),
-      );
-    } catch (e) {
-      debugPrint(
-        'HIVE THREW IN SECURE STORAGE REPOSITORY keyPrefix: $keyPrefix | migrationBoxKey: $migrationBoxKey | e: $e',
-      );
-    }
-
-    try {
-      for (final key in hiveStorageBox.keys) {
-        final encodedValue = hiveStorageBox.get(key);
-        // Safe decoding
-        dynamic hiveValue;
-        if (encodedValue == null) {
-          hiveValue = null;
-        } else if (encodedValue is String) {
-          try {
-            hiveValue = json.decode(encodedValue);
-          } catch (e) {
-            // If JSON decode fails, use the string as-is
-            debugPrint('Failed to decode value for key $key, using raw value');
-            hiveValue = encodedValue;
-          }
-        } else {
-          hiveValue = encodedValue;
-        }
-
-        if (hiveValue != null) {
-          if (!await contains(key)) {
-            await set(key, hiveValue);
-          }
-        }
-      }
-
-      await set(StorageRepositoryKeys.migrationCheckKey, true);
-      // await hiveStorageBox.deleteFromDisk();
-    } catch (e) {
-      debugPrint(
-        'SECURE STORAGE REPOSITORY keyPrefix: $keyPrefix migrationBoxKey: $migrationBoxKey threw an EXCEPTION: ${e.toString()}',
-      );
-    }
   }
 
   /// Saves a key-value pair to the device's storage.

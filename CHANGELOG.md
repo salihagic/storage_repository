@@ -1,3 +1,7 @@
+## 3.0.0
+
+* Removed Hive migration logic
+
 ## 2.0.2
 
 * Dependencies upgraded and docs updated

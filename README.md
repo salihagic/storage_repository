@@ -78,7 +78,7 @@ Both `StorageRepositoryImpl` and `SecureStorageRepositoryImpl` implement the sam
 
 | Method | Description | Returns |
 |--------|-------------|---------|
-| `init([migrateFromHive])` | Initialize the storage | `Future<StorageRepository>` |
+| `init()` | Initialize the storage | `Future<StorageRepository>` |
 | `set(key, value)` | Store a value | `Future<bool>` |
 | `get(key)` | Retrieve a value | `Future<dynamic>` |
 | `getAll()` | Get all stored key-value pairs | `Future<Map<String, dynamic>>` |
@@ -202,18 +202,6 @@ await storage.clear();
 | Windows | File-based | File-based with encryption |
 | macOS | NSUserDefaults | Keychain |
 | Linux | File-based | File-based with encryption |
-
-## Migration from v1.x
-
-Version 2.x migrates from Hive to platform-native storage. The migration is automatic:
-
-```dart
-final storage = StorageRepositoryImpl();
-await storage.init(); // Automatically migrates data from Hive
-
-// To skip migration (if you're sure there's no Hive data):
-await storage.init(false);
-```
 
 ## License
 

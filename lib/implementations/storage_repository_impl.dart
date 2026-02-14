@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:developer' as developer;
 import 'package:flutter/foundation.dart';
-import 'package:hive_flutter/hive_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:storage_repository/constants/storage_repository_keys.dart';
 import 'package:storage_repository/interfaces/storage_repository.dart';
@@ -18,14 +17,12 @@ class StorageRepositoryImpl implements StorageRepository {
 
   /// Key used to identify the storage box.
   late final String keyPrefix;
-  late final String migrationBoxKey;
 
   /// Constructor for `StorageRepositoryImpl`.
   ///
   /// - [keyPrefix]: The prefix used to namespace storage keys for this repository instance.
   StorageRepositoryImpl({
     this.keyPrefix = StorageRepositoryKeys.defaultStorageKeyPrefix,
-    this.migrationBoxKey = StorageRepositoryKeys.migrationDefaultBoxKey,
   });
 
   String _generateKey(String key) => '$keyPrefix:$key';
@@ -35,73 +32,12 @@ class StorageRepositoryImpl implements StorageRepository {
   /// Initializes the storage repository.
   ///
   /// This method should be called immediately after creating an instance of this class.
-  /// It performs one-time migration from Hive storage if [migrateFromHive] is true.
   ///
   /// Returns an instance of [StorageRepository] once initialized.
   @override
-  Future<StorageRepository> init([bool migrateFromHive = true]) async {
+  Future<StorageRepository> init() async {
     storage = await SharedPreferences.getInstance();
-
-    if (migrateFromHive) {
-      await _migrateFromHive();
-    }
-
     return this;
-  }
-
-  Future<void> _migrateFromHive() async {
-    // final migrationAlreadyDone = await get(StorageRepositoryKeys.migrationCheckKey);
-
-    // if (migrationAlreadyDone == true) {
-    //   return;
-    // }
-
-    Box? hiveStorageBox;
-
-    try {
-      // Attempt to open the Hive storage box.
-      hiveStorageBox = await Hive.openBox(migrationBoxKey);
-    } catch (e) {
-      debugPrint(e.toString());
-
-      // If an error occurs, delete the storage box and retry opening it.
-      Hive.deleteBoxFromDisk(migrationBoxKey);
-      try {
-        hiveStorageBox = await Hive.openBox(migrationBoxKey);
-      } catch (e) {
-        debugPrint(e.toString());
-      }
-    }
-
-    if (hiveStorageBox != null) {
-      for (final key in hiveStorageBox.keys) {
-        final encodedValue = hiveStorageBox.get(key);
-        // Safe decoding
-        dynamic hiveValue;
-        if (encodedValue == null) {
-          hiveValue = null;
-        } else if (encodedValue is String) {
-          try {
-            hiveValue = json.decode(encodedValue);
-          } catch (e) {
-            // If JSON decode fails, use the string as-is
-            debugPrint('Failed to decode value for key $key, using raw value');
-            hiveValue = encodedValue;
-          }
-        } else {
-          hiveValue = encodedValue;
-        }
-
-        if (hiveValue != null) {
-          if (!await contains(key)) {
-            await set(key, hiveValue);
-          }
-        }
-      }
-
-      await set(StorageRepositoryKeys.migrationCheckKey, true);
-      // await hiveStorageBox.deleteFromDisk();
-    }
   }
 
   /// Saves a key-value pair to the device's storage.
